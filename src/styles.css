@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Newsreader", ui-serif, Georgia, serif;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -34,8 +34,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
-  --color-lagoon: var(--lagoon);
-  --color-sand: var(--sand);
+  --color-highlight: var(--highlight);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -57,50 +56,50 @@
   --shadow-lift: var(--shadow-lift-v);
 }
 
+/* Paleta verde, branco e cinza — Hotel Recanto das Águas. */
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.975 0.012 85);
-  --foreground: oklch(0.25 0.04 220);
-  --card: oklch(0.993 0.006 85);
-  --card-foreground: oklch(0.25 0.04 220);
-  --popover: oklch(0.993 0.006 85);
-  --popover-foreground: oklch(0.25 0.04 220);
-  --primary: oklch(0.42 0.085 205);
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.935 0.025 85);
-  --secondary-foreground: oklch(0.3 0.05 215);
-  --muted: oklch(0.945 0.015 85);
-  --muted-foreground: oklch(0.5 0.03 220);
-  --accent: oklch(0.7 0.14 45);
-  --accent-foreground: oklch(0.99 0.01 85);
-  --destructive: oklch(0.57 0.2 27);
-  --destructive-foreground: oklch(0.99 0.01 85);
-  --success: oklch(0.58 0.12 160);
-  --success-foreground: oklch(0.99 0.01 85);
-  --warning: oklch(0.8 0.14 80);
-  --warning-foreground: oklch(0.3 0.06 60);
-  --lagoon: oklch(0.82 0.08 195);
-  --sand: oklch(0.9 0.04 80);
-  --border: oklch(0.89 0.02 85);
-  --input: oklch(0.88 0.02 85);
-  --ring: oklch(0.55 0.09 205);
-  --chart-1: oklch(0.42 0.085 205);
-  --chart-2: oklch(0.7 0.14 45);
-  --chart-3: oklch(0.58 0.12 160);
-  --chart-4: oklch(0.8 0.14 80);
-  --chart-5: oklch(0.6 0.1 250);
-  --sidebar: oklch(0.3 0.06 210);
-  --sidebar-foreground: oklch(0.95 0.015 85);
-  --sidebar-primary: oklch(0.7 0.14 45);
-  --sidebar-primary-foreground: oklch(0.99 0.01 85);
-  --sidebar-accent: oklch(0.36 0.06 210);
-  --sidebar-accent-foreground: oklch(0.97 0.01 85);
-  --sidebar-border: oklch(0.38 0.05 210);
-  --sidebar-ring: oklch(0.7 0.14 45);
-  --gradient-lagoon: linear-gradient(135deg, oklch(0.42 0.085 205), oklch(0.55 0.1 190));
-  --gradient-dusk: linear-gradient(180deg, transparent, oklch(0.2 0.05 220 / 0.85));
-  --shadow-soft-v: 0 1px 2px oklch(0.25 0.04 220 / 0.05), 0 8px 24px -12px oklch(0.25 0.04 220 / 0.18);
-  --shadow-lift-v: 0 20px 50px -20px oklch(0.3 0.08 205 / 0.45);
+  --radius: 0.625rem;
+  --background: hsl(0 0% 98%);
+  --foreground: hsl(220 9% 20%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 9% 20%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(220 9% 20%);
+  --primary: hsl(155 55% 30%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 10% 96%);
+  --secondary-foreground: hsl(220 9% 25%);
+  --muted: hsl(220 10% 94%);
+  --muted-foreground: hsl(220 6% 46%);
+  --accent: hsl(155 48% 40%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --success: hsl(155 55% 30%);
+  --success-foreground: hsl(0 0% 100%);
+  --warning: hsl(42 85% 48%);
+  --warning-foreground: hsl(220 9% 18%);
+  --highlight: hsl(145 45% 78%);
+  --border: hsl(220 10% 88%);
+  --input: hsl(220 10% 88%);
+  --ring: hsl(155 55% 30%);
+  --chart-1: hsl(155 55% 30%);
+  --chart-2: hsl(155 40% 45%);
+  --chart-3: hsl(220 9% 35%);
+  --chart-4: hsl(42 85% 48%);
+  --chart-5: hsl(220 6% 55%);
+  --sidebar: hsl(220 9% 16%);
+  --sidebar-foreground: hsl(0 0% 97%);
+  --sidebar-primary: hsl(155 48% 42%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 8% 22%);
+  --sidebar-accent-foreground: hsl(0 0% 97%);
+  --sidebar-border: hsl(220 8% 26%);
+  --sidebar-ring: hsl(155 55% 38%);
+  --gradient-brand: linear-gradient(135deg, hsl(158 58% 26%) 0%, hsl(152 42% 38%) 100%);
+  --gradient-hero-overlay: linear-gradient(180deg, rgb(255 255 255 / 0.06), rgb(26 32 30 / 0.82));
+  --shadow-soft-v: 0 1px 3px 0 rgb(30 35 33 / 0.06), 0 1px 2px -1px rgb(30 35 33 / 0.06);
+  --shadow-lift-v: 0 10px 25px -5px rgb(30 35 33 / 0.1), 0 8px 10px -6px rgb(22 120 72 / 0.14);
 }
 
 @layer base {
@@ -112,26 +111,33 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
 }
 
-@utility bg-lagoon-gradient {
-  background-image: var(--gradient-lagoon);
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
 }
-@utility bg-dusk {
-  background-image: var(--gradient-dusk);
+@utility bg-hero-overlay {
+  background-image: var(--gradient-hero-overlay);
 }
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
 
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--warning) 60%, transparent); }
-  100% { box-shadow: 0 0 0 14px transparent; }
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--warning) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
 }
 @utility animate-pulse-ring {
   animation: pulse-ring 1.6s ease-out infinite;

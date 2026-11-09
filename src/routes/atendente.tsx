@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireStaffAuth } from "@/lib/auth";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Ban, BedDouble, CheckCircle2, Minus, Plus, Receipt, Search, Send, ShoppingBag, Sun, Trash2, UserRound } from "lucide-react";
@@ -12,6 +13,7 @@ import { brl, cancelProposal, createProposal, DomainError, resolveCredential, ty
 import { commit, getState, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/atendente")({
+  beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
   head: () => ({
     meta: [
       { title: "Atendente · Recanto das Águas" },

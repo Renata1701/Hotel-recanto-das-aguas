@@ -1,4 +1,5 @@
 import type { Product, State } from "./domain";
+import { FICTIONAL_DEMO_GUEST } from "./demo-client";
 
 const products: Product[] = [
   { id: "p1", name: "Cerveja long neck", category: "Bebidas", description: "Pilsen 355 ml, bem gelada", price: 1400, available: true },
@@ -54,6 +55,14 @@ export function seedState(): State {
         openedAt: t,
         participants: [{ id: "par_marina", name: "Marina Lima" }],
       },
+      {
+        id: "sty_fict",
+        type: "dayuse",
+        holderId: "par_fict",
+        status: "aberta",
+        openedAt: t,
+        participants: [{ id: "par_fict", name: FICTIONAL_DEMO_GUEST.name }],
+      },
     ],
     credentials: [
       { id: "crd_rafael", code: "RDA-R4F4-208A", stayId: "sty_208", participantId: "par_rafael", medium: "celular", status: "ativa", pin: "1234", issuedAt: t },
@@ -61,6 +70,16 @@ export function seedState(): State {
       { id: "crd_clara", code: "RDA-CL4R-208C", stayId: "sty_208", participantId: "par_clara", medium: "pulseira", status: "ativa", activationCode: "482913", issuedAt: t },
       { id: "crd_joao", code: "RDA-J04O-203A", stayId: "sty_203", participantId: "par_joao", medium: "celular", status: "ativa", pin: "1234", issuedAt: t },
       { id: "crd_marina", code: "RDA-M4R1-DU01", stayId: "sty_du1", participantId: "par_marina", medium: "pulseira", status: "ativa", pin: "1234", issuedAt: t },
+      {
+        id: "crd_fict",
+        code: FICTIONAL_DEMO_GUEST.credential,
+        stayId: "sty_fict",
+        participantId: "par_fict",
+        medium: "celular",
+        status: "ativa",
+        pin: FICTIONAL_DEMO_GUEST.pin,
+        issuedAt: t,
+      },
     ],
     proposals: [],
     entries: [

@@ -399,7 +399,15 @@ export function openStay(
       audit: log(s, actor, `Permanência aberta (${stay.room ?? "day use"})`),
     },
     stay,
+    credentials: creds,
   };
+}
+
+/** Cadastro de demonstração: day use + credencial web (RF03 simplificado para testes). */
+export function registerFictionalGuest(s: State, name: string, actor = "Cadastro fictício", now = Date.now()) {
+  const trimmed = name.trim();
+  if (trimmed.length < 2) throw new DomainError("Informe seu nome completo.");
+  return openStay(s, { type: "dayuse", names: [trimmed], medium: "celular" }, actor, now);
 }
 
 export function registerPayment(
