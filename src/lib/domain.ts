@@ -29,12 +29,12 @@ export interface Participant {
 export interface Stay {
   id: string;
   type: StayType;
-  room?: string;
+  room?: string | undefined;
   holderId: string;
   participants: Participant[];
   status: AccountStatus;
   openedAt: number;
-  closedAt?: number;
+  closedAt?: number | undefined;
 }
 
 export type CredentialStatus = "ativa" | "bloqueada" | "expirada" | "revogada";
@@ -47,8 +47,8 @@ export interface Credential {
   participantId: string;
   medium: CredentialMedium;
   status: CredentialStatus;
-  pin?: string;
-  activationCode?: string; // single use, cleared after activation
+  pin?: string | undefined;
+  activationCode?: string | undefined; // single use, cleared after activation
   issuedAt: number;
 }
 
@@ -59,7 +59,7 @@ export interface ProposalItem {
   name: string;
   unitPrice: number;
   qty: number;
-  note?: string;
+  note?: string | undefined;
 }
 
 export interface Proposal {
@@ -75,20 +75,20 @@ export interface Proposal {
   status: ProposalStatus;
   createdAt: number;
   expiresAt: number;
-  resolvedAt?: number;
-  resolvedVia?: "sessao" | "terminal";
+  resolvedAt?: number | undefined;
+  resolvedVia?: "sessao" | "terminal" | undefined;
 }
 
 export interface Entry {
   id: string;
   stayId: string;
   kind: "debito" | "estorno";
-  proposalId?: string;
-  participantId?: string;
+  proposalId?: string | undefined;
+  participantId?: string | undefined;
   amount: number; // positive cents; estorno subtracts
   description: string;
   author: string;
-  reason?: string;
+  reason?: string | undefined;
   at: number;
 }
 
@@ -189,7 +189,7 @@ export function createProposal(
     credentialCode: string;
     sector: Sector;
     attendant: string;
-    items: { productId: string; qty: number; note?: string }[];
+    items: { productId: string; qty: number; note?: string | undefined }[];
     operationId: string;
   },
   now = Date.now(),
@@ -376,7 +376,7 @@ export function openStay(
     id: uid("sty"),
     type: input.type,
     room: input.type === "hospedagem" ? input.room!.trim() : undefined,
-    holderId: participants[0].id,
+    holderId: participants[0]!.id,
     participants,
     status: "aberta",
     openedAt: now,

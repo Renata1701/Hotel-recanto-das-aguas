@@ -33,7 +33,7 @@ const demoCodes = [
   { code: "RDA-J04O-203A", label: "João · 203" },
 ];
 
-type Cart = Record<string, { qty: number; note?: string }>;
+type Cart = Record<string, { qty: number; note?: string | undefined }>;
 const newOp = () => crypto.randomUUID();
 
 function Attendant() {
@@ -222,7 +222,7 @@ function Attendant() {
                     </div>
                     <input
                       value={l.note ?? ""}
-                      onChange={(e) => setCart((c) => ({ ...c, [l.product.id]: { ...c[l.product.id], note: e.target.value } }))}
+                      onChange={(e) => setCart((c) => ({ ...c, [l.product.id]: { qty: l.qty, note: e.target.value } }))}
                       placeholder="Observação (opcional)"
                       className="w-full rounded-md border-0 bg-muted/60 px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-ring"
                     />
