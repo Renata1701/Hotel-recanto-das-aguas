@@ -156,19 +156,10 @@ export function ClientGuestShell({ title, children }: { title: string; children:
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#ffffff] lg:w-[42%] lg:max-w-[42%] lg:flex-none lg:bg-[var(--login-surface)]">
-        <header className="flex shrink-0 items-center gap-3 border-b border-[var(--login-border)] px-4 py-3 lg:border-0 lg:px-8 lg:pt-8 lg:pb-0">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-sm lg:hidden">
-            <Waves className="size-5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-base font-semibold leading-tight text-[var(--login-ink)] lg:text-lg">
-              Recanto das Águas
-            </p>
-            <p className="truncate text-xs text-[var(--login-muted)]">{title}</p>
-          </div>
-        </header>
-
-        <main className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-4 py-5 sm:px-8 sm:py-6">
+        <main
+          aria-label={title}
+          className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-4 py-6 sm:px-8 lg:py-8"
+        >
           <div className="mx-auto w-full max-w-[26rem]">{children}</div>
         </main>
 
