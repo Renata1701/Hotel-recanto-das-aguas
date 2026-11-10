@@ -131,6 +131,10 @@ export function seedState(): State {
     proposals: [],
     entries: [
       { id: "ent_seed1", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 5600, description: "Bar da Piscina · 4× Cerveja long neck", author: "Lucas (bar)", at: t + 3600e3 },
+      { id: "ent_seed1b", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 1200, description: "Bar da Piscina · 1× Água de coco", author: "Lucas (bar)", at: t + 4200e3 },
+      { id: "ent_seed1c", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 3800, description: "Restaurante · 1× Risoto de camarão", author: "Lucas (bar)", at: t + 7200e3 },
+      { id: "ent_seed1d", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 900, description: "Lanchonete · 1× Sanduíche natural", author: "Bia (lanchonete)", at: t + 9000e3 },
+      { id: "ent_seed1e", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 1600, description: "Bar da Piscina · 2× Caipirinha", author: "Lucas (bar)", at: t + 10800e3 },
       { id: "ent_seed2", stayId: "sty_208", kind: "debito", participantId: "par_clara", amount: 2400, description: "Lanchonete · 1× Açaí 500 ml", author: "Bia (lanchonete)", at: t + 5400e3 },
     ],
     payments: [],

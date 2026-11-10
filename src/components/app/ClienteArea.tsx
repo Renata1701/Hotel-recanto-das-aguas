@@ -1,8 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { CheckCircle2, LogOut, Smartphone, UserPlus } from "lucide-react";
-import { BrandMark } from "@/components/app/BrandMark";
-import { useMemo, useState, type FormEvent } from "react";
+import { CheckCircle2, ChevronLeft, ChevronRight, LogOut, Smartphone, UserPlus, Waves } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CredentialCodes, EmptyState, Panel, StatusPill, fmtTime } from "@/components/app/shared";
 import { FICTIONAL_DEMO_GUEST } from "@/lib/demo-client";
@@ -21,6 +19,9 @@ import {
   registerFictionalGuest,
   resolveProposal,
   type Credential,
+  type Entry,
+  type Payment,
+  type Proposal,
   type State,
 } from "@/lib/domain";
 import {
@@ -33,28 +34,151 @@ import {
   type GuestSession,
 } from "@/lib/client-session";
 import { commit, getState } from "@/lib/store";
+import { cn } from "@/lib/utils";
+import hero from "@/assets/hero-pool.jpg";
+
+const guestCredentialPattern = /^RDA-[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
+const GUEST_LIST_PAGE_SIZE = 4;
+
+function GuestListPagination({
+  page,
+  totalPages,
+  total,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  total: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (total <= GUEST_LIST_PAGE_SIZE) return null;
+
+  return (
+    <div className="mt-3 flex flex-col gap-2 border-t border-border/80 pt-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-center text-xs text-muted-foreground sm:text-left">
+        {total} {total === 1 ? "item" : "itens"} · página {page} de {totalPages}
+      </p>
+      <div className="flex justify-center gap-2 sm:justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 px-2.5"
+          disabled={page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          <ChevronLeft className="size-4" aria-hidden />
+          Anterior
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1 px-2.5"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(page + 1)}
+        >
+          Próxima
+          <ChevronRight className="size-4" aria-hidden />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function usePagedList<T>(items: T[], pageSize: number) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  useEffect(() => {
+    setPage((p) => Math.min(p, totalPages));
+  }, [totalPages, items.length]);
+
+  const slice = items.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  return { slice, page: safePage, setPage, totalPages, total: items.length };
+}
+
+function GuestPagedPanel<T>({
+  title,
+  items,
+  empty,
+  renderList,
+}: {
+  title: string;
+  items: T[];
+  empty: ReactNode;
+  renderList: (slice: T[]) => ReactNode;
+}) {
+  const { slice, page, setPage, totalPages, total } = usePagedList(items, GUEST_LIST_PAGE_SIZE);
+
+  return (
+    <Panel title={title}>
+      {items.length === 0 ? (
+        empty
+      ) : (
+        <>
+          {renderList(slice)}
+          <GuestListPagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+        </>
+      )}
+    </Panel>
+  );
+}
 
 export function ClientGuestShell({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/80 bg-card">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
-          <span className="grid size-10 place-items-center rounded-lg bg-brand-gradient text-primary-foreground">
-            <Waves className="size-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-lg font-semibold leading-tight">Recanto das Águas</p>
-            <p className="text-xs text-muted-foreground">{title}</p>
+    <div className="login-resort flex h-dvh max-h-dvh flex-col overflow-hidden lg:flex-row">
+      <aside className="relative hidden min-h-0 flex-1 overflow-hidden lg:flex lg:min-w-0 lg:max-w-[58%]">
+        <img src={hero} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="login-resort-hero-overlay absolute inset-0" aria-hidden />
+        <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-14">
+          <div className="flex items-center gap-3 text-white">
+            <span className="grid size-12 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25">
+              <Waves className="size-6" aria-hidden />
+            </span>
+            <div>
+              <p className="text-sm font-semibold tracking-tight">Recanto das Águas</p>
+              <p className="text-xs text-white/75">Área do hóspede</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">Sem aplicativo</p>
+            <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight text-white xl:text-4xl">
+              Sua comanda no celular
+            </h2>
+            <p className="mt-3 max-w-sm text-base text-white/90">
+              Confirme consumos, acompanhe saldo e fique na sua permanência com segurança.
+            </p>
           </div>
         </div>
-      </header>
-      <main className="mx-auto max-w-lg px-4 py-8">{children}</main>
-      <footer className="mx-auto max-w-lg px-4 pb-10 text-center text-xs text-muted-foreground">
-        Área do hóspede — sem app instalado.{" "}
-        <Link to="/login" className="text-primary hover:underline">
-          Acesso da equipe
-        </Link>
-      </footer>
+      </aside>
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#ffffff] lg:w-[42%] lg:max-w-[42%] lg:flex-none lg:bg-[var(--login-surface)]">
+        <header className="flex shrink-0 items-center gap-3 border-b border-[var(--login-border)] px-4 py-3 lg:border-0 lg:px-8 lg:pt-8 lg:pb-0">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-sm lg:hidden">
+            <Waves className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-base font-semibold leading-tight text-[var(--login-ink)] lg:text-lg">
+              Recanto das Águas
+            </p>
+            <p className="truncate text-xs text-[var(--login-muted)]">{title}</p>
+          </div>
+        </header>
+
+        <main className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-4 py-5 sm:px-8 sm:py-6">
+          <div className="mx-auto w-full max-w-[26rem]">{children}</div>
+        </main>
+
+        <footer className="shrink-0 border-t border-[var(--login-border)] px-4 py-3 text-center text-xs text-[var(--login-muted)] lg:border-0 lg:pb-6">
+          Área do hóspede — sem app instalado.{" "}
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            Acesso da equipe
+          </Link>
+        </footer>
+      </div>
     </div>
   );
 }
@@ -67,8 +191,15 @@ export function GuestEnterForm({ initialCode = "" }: { initialCode?: string }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    const normalized = code.trim().toUpperCase();
+    if (!guestCredentialPattern.test(normalized)) {
+      setError(
+        "Use o código da credencial (ex.: RDA-R4F4-208A), não o usuário da equipe. Funcionários entram em /login.",
+      );
+      return;
+    }
     const st = getState();
-    const cred = st.credentials.find((c) => c.code === code.trim().toUpperCase());
+    const cred = st.credentials.find((c) => c.code === normalized);
     if (cred) {
       const lock = getPinLock(cred.id);
       if (lock && lock.until > Date.now()) {
@@ -85,10 +216,13 @@ export function GuestEnterForm({ initialCode = "" }: { initialCode?: string }) {
         guestSessionFromCredential(logged, participant.name, stay.room ? `Quarto ${stay.room}` : "Day use"),
       );
       toast.success(`Olá, ${participant.name}`);
-    } catch (e) {
-      const msg = (e as DomainError).message;
-      if (cred) recordPinFailure(cred.id);
-      setError(msg);
+    } catch {
+      if (cred) {
+        recordPinFailure(cred.id);
+        setError("PIN incorreto. Confira os dígitos ou ative o acesso se ainda não definiu um PIN.");
+      } else {
+        setError("Credencial não encontrada. Verifique o código ou peça uma nova credencial na recepção.");
+      }
     }
   };
 
@@ -369,11 +503,26 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
     () => state.proposals.find((p) => p.credentialId === guest.credentialId && p.status === "aguardando"),
     [state.proposals, guest.credentialId],
   );
-  const recent = state.proposals.filter((p) => p.credentialId === guest.credentialId).slice(0, 6);
   const participantId = cred?.participantId;
-  const myEntries = state.entries.filter((e) => e.participantId === participantId);
+  const myEntries = useMemo(
+    () =>
+      state.entries
+        .filter((e) => e.participantId === participantId)
+        .sort((a, b) => b.at - a.at),
+    [state.entries, participantId],
+  );
+  const myProposals = useMemo(
+    () =>
+      state.proposals
+        .filter((p) => p.credentialId === guest.credentialId)
+        .sort((a, b) => b.createdAt - a.createdAt),
+    [state.proposals, guest.credentialId],
+  );
   const accountEntries = stay ? state.entries.filter((e) => e.stayId === stay.id) : [];
-  const payments = stay ? state.payments.filter((p) => p.stayId === stay.id) : [];
+  const payments = useMemo(
+    () => (stay ? state.payments.filter((p) => p.stayId === stay.id).sort((a, b) => b.at - a.at) : []),
+    [state.payments, stay],
+  );
   const bals = stay ? balance(state, stay.id) : { debits: 0, paid: 0, due: 0 };
 
   const resolve = (decision: "confirmar" | "recusar") => {
@@ -396,15 +545,63 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
     toast.message("Sessão encerrada. Ninguém mais acessa sua conta neste aparelho.");
   };
 
+  const consumosList = (slice: Entry[]) => (
+    <ul className="divide-y text-sm">
+      {slice.map((e) => (
+        <li key={e.id} className="flex justify-between gap-3 py-2.5">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-medium">{e.description}</span>
+            <span className="text-xs text-muted-foreground">{fmtTime(e.at)}</span>
+          </span>
+          <span className={cn("tabular shrink-0 font-semibold", e.kind === "estorno" && "text-success")}>
+            {e.kind === "estorno" ? "−" : ""}
+            {brl(e.amount)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+
+  const propostasList = (slice: Proposal[]) => (
+    <ul className="divide-y text-sm">
+      {slice.map((p) => (
+        <li key={p.id} className="flex items-center justify-between gap-2 py-2.5">
+          <span className="min-w-0 truncate">
+            {fmtTime(p.createdAt)} · {brl(p.total)}
+          </span>
+          <StatusPill status={p.status} className="shrink-0" />
+        </li>
+      ))}
+    </ul>
+  );
+
+  const pagamentosList = (slice: Payment[]) => (
+    <ul className="divide-y text-sm">
+      {slice.map((p) => (
+        <li key={p.id} className="flex justify-between gap-2 py-2.5">
+          <span className="truncate">
+            {p.method} · {fmtTime(p.at)}
+          </span>
+          <span className="tabular shrink-0 font-semibold">{brl(p.amount)}</span>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
-    <div className="min-h-screen bg-background pb-12">
-      <header className="sticky top-0 z-20 border-b border-border/80 bg-card/95 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
-          <div className="min-w-0">
-            <p className="truncate font-semibold">{guest.participantName}</p>
-            <p className="text-xs text-muted-foreground">
-              {guest.stayLabel} · credencial <span className="font-mono">{guest.code}</span>
-            </p>
+    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-gradient-surface">
+      <header className="shrink-0 border-b border-border/80 bg-card/95 backdrop-blur">
+        <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-8 lg:px-10">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-sm">
+              <Waves className="size-5" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold">{guest.participantName}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {guest.stayLabel} · credencial <span className="font-mono">{guest.code}</span>
+              </p>
+            </div>
           </div>
           <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" onClick={logout}>
             <LogOut className="size-3.5" /> Sair
@@ -412,92 +609,94 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg space-y-4 px-4 py-6">
-        <Panel title="Saldo da permanência (RF22)">
-          <div className="grid grid-cols-3 gap-2 text-center text-sm">
-            <div>
-              <p className="text-muted-foreground">Consumos</p>
-              <p className="tabular font-semibold">{brl(bals.debits)}</p>
+      <main className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:gap-5 sm:p-6 lg:grid-cols-2 lg:overflow-hidden lg:p-8 xl:grid-cols-3">
+        <section className="flex min-h-0 flex-col gap-4 lg:min-h-0 lg:overflow-y-auto">
+          <Panel title="Saldo da permanência (RF22)" className="shrink-0">
+            <div className="grid grid-cols-3 gap-3 text-center text-sm sm:gap-4">
+              <div className="rounded-xl bg-secondary/50 px-2 py-3">
+                <p className="text-muted-foreground">Consumos</p>
+                <p className="tabular text-lg font-semibold">{brl(bals.debits)}</p>
+              </div>
+              <div className="rounded-xl bg-secondary/50 px-2 py-3">
+                <p className="text-muted-foreground">Pagos</p>
+                <p className="tabular text-lg font-semibold">{brl(bals.paid)}</p>
+              </div>
+              <div className="rounded-xl bg-primary/10 px-2 py-3">
+                <p className="text-muted-foreground">Saldo</p>
+                <p className="tabular text-lg font-semibold text-primary">{brl(bals.due)}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-muted-foreground">Pagos</p>
-              <p className="tabular font-semibold">{brl(bals.paid)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Saldo</p>
-              <p className="tabular font-semibold text-primary">{brl(bals.due)}</p>
-            </div>
-          </div>
-        </Panel>
-
-        <Panel title="Pedido aguardando">
-          {pending ? (
-            <ProposalReview proposal={pending} onConfirm={() => resolve("confirmar")} onRefuse={() => resolve("recusar")} />
-          ) : (
-            <EmptyState
-              icon={<Smartphone className="size-5" />}
-              title="Nenhuma proposta pendente"
-              hint="Mantenha esta página aberta; novas propostas aparecem em poucos segundos."
-            />
-          )}
-        </Panel>
-
-        <Panel title="Meus consumos confirmados">
-          {myEntries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sem lançamentos para você ainda.</p>
-          ) : (
-            <ul className="divide-y text-sm">
-              {myEntries.map((e) => (
-                <li key={e.id} className="flex justify-between gap-2 py-2">
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate">{e.description}</span>
-                    <span className="text-xs text-muted-foreground">{fmtTime(e.at)}</span>
-                  </span>
-                  <span className={`tabular font-medium ${e.kind === "estorno" ? "text-success" : ""}`}>
-                    {e.kind === "estorno" ? "−" : ""}
-                    {brl(e.amount)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-
-        {payments.length > 0 && (
-          <Panel title="Pagamentos na conta">
-            <ul className="divide-y text-sm">
-              {payments.map((p) => (
-                <li key={p.id} className="flex justify-between py-2">
-                  <span>
-                    {p.method} · {fmtTime(p.at)}
-                  </span>
-                  <span className="tabular font-medium">{brl(p.amount)}</span>
-                </li>
-              ))}
-            </ul>
           </Panel>
-        )}
 
-        <Panel title="Propostas recentes">
-          <ul className="space-y-2 text-sm">
-            {recent.length === 0 ? (
-              <li className="text-muted-foreground">Nenhuma proposta ainda.</li>
+          <Panel title="Pedido aguardando" className="shrink-0">
+            {pending ? (
+              <ProposalReview proposal={pending} onConfirm={() => resolve("confirmar")} onRefuse={() => resolve("recusar")} />
             ) : (
-              recent.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{fmtTime(p.createdAt)} · {brl(p.total)}</span>
-                  <StatusPill status={p.status} />
-                </li>
-              ))
+              <EmptyState
+                icon={<Smartphone className="size-5" />}
+                title="Nenhuma proposta pendente"
+                hint="Mantenha esta página aberta; novas propostas aparecem em poucos segundos."
+              />
             )}
-          </ul>
-        </Panel>
+          </Panel>
 
-        {accountEntries.length > myEntries.length && (
-          <p className="text-center text-xs text-muted-foreground">
-            Outros participantes também consomem nesta permanência. Você só confirma propostas enviadas para a sua credencial.
-          </p>
-        )}
+          <div className="hidden min-h-0 flex-1 flex-col xl:flex">
+            <GuestPagedPanel<Proposal>
+              title="Propostas recentes"
+              items={myProposals}
+              empty={<p className="text-sm text-muted-foreground">Nenhuma proposta ainda.</p>}
+              renderList={propostasList}
+            />
+          </div>
+
+          {payments.length > 0 && (
+            <div className="hidden xl:block">
+              <GuestPagedPanel<Payment>
+                title="Pagamentos na conta"
+                items={payments}
+                empty={null}
+                renderList={pagamentosList}
+              />
+            </div>
+          )}
+        </section>
+
+        <section className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
+          <GuestPagedPanel<Entry>
+            title="Meus consumos confirmados"
+            items={myEntries}
+            empty={<p className="text-sm text-muted-foreground">Sem lançamentos para você ainda.</p>}
+            renderList={consumosList}
+          />
+        </section>
+
+        <section className="flex min-h-0 flex-col gap-4 lg:col-span-2 lg:min-h-0 lg:overflow-y-auto xl:col-span-1 xl:col-start-auto">
+          <div className="xl:hidden">
+            <GuestPagedPanel<Proposal>
+              title="Propostas recentes"
+              items={myProposals}
+              empty={<p className="text-sm text-muted-foreground">Nenhuma proposta ainda.</p>}
+              renderList={propostasList}
+            />
+          </div>
+
+          {payments.length > 0 && (
+            <div className="xl:hidden">
+              <GuestPagedPanel<Payment>
+                title="Pagamentos na conta"
+                items={payments}
+                empty={null}
+                renderList={pagamentosList}
+              />
+            </div>
+          )}
+
+          {accountEntries.length > myEntries.length && (
+            <p className="rounded-xl border border-border/80 bg-card/80 px-4 py-3 text-center text-xs text-muted-foreground shadow-soft">
+              Outros participantes também consomem nesta permanência. Você só confirma propostas enviadas para a sua credencial.
+            </p>
+          )}
+        </section>
       </main>
     </div>
   );

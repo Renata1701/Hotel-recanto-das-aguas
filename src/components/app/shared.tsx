@@ -11,6 +11,7 @@ import {
   RotateCcw,
   ScanLine,
   Smartphone,
+  Waves,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -27,7 +28,6 @@ import { Input } from "@/components/ui/input";
 import { PROPOSAL_TTL_MS, type ProposalStatus } from "@/lib/domain";
 import { clearStaffSession, staffNavForRole, useStaffSession } from "@/lib/auth";
 import { resetDemo, useNow } from "@/lib/store";
-import { BrandMark } from "@/components/app/BrandMark";
 
 const staffNavIcon = (to: string) => {
   switch (to) {
@@ -74,8 +74,8 @@ export function StaffLayout({
         onClick={() => setMobileOpen(false)}
         className="flex items-center gap-3 border-b border-white/15 px-4 py-4"
       >
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white p-1 shadow-soft ring-1 ring-white/30">
-          <BrandMark size={40} alt="" />
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15 text-white shadow-soft ring-1 ring-white/20">
+          <Waves className="size-5" />
         </span>
         <span className="min-w-0 leading-tight">
           <span className="block truncate text-base font-semibold tracking-tight text-white">Recanto das Águas</span>

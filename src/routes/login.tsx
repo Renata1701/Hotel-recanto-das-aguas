@@ -1,6 +1,5 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { BrandMark } from "@/components/app/BrandMark";
+import { Eye, EyeOff, Lock, Mail, Waves } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import hero from "@/assets/hero-pool.jpg";
@@ -77,7 +76,9 @@ function LoginPage() {
         <div className="w-full max-w-[24.5rem]">
           <div className="login-resort-card rounded-2xl p-8 sm:p-9">
             <header className="text-center">
-              <BrandMark className="mx-auto" size={72} />
+              <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-gradient text-white shadow-md">
+                <Waves className="size-7" aria-hidden />
+              </div>
               <p className="mt-5 text-lg font-semibold tracking-tight text-[var(--login-ink)]">Recanto das Águas</p>
             </header>
 
