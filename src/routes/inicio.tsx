@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, ConciergeBell, MonitorSmartphone, ScanLine, Smartphone, Waves } from "lucide-react";
+import { ArrowRight, ConciergeBell, MonitorSmartphone, ScanLine, UserPlus } from "lucide-react";
 import hero from "@/assets/hero-pool.jpg";
 import { StaffLayout } from "@/components/app/shared";
-import { getStaffSession } from "@/lib/auth";
+import { getStaffSession, useStaffSession } from "@/lib/auth";
 import { redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/inicio")({
@@ -18,74 +18,165 @@ export const Route = createFileRoute("/inicio")({
 });
 
 const areas = [
-  { to: "/atendente", icon: ScanLine, title: "Atendente", text: "Catálogo, leitura da credencial e envio da proposta para o cliente conferir." },
-  { to: "/cliente/entrar", icon: Smartphone, title: "Cliente", text: "Entrar ou ativar acesso no navegador — sem app." },
-  { to: "/terminal", icon: MonitorSmartphone, title: "Terminal", text: "Tela voltada ao hóspede de pulseira: confere o pedido e confirma com PIN." },
-  { to: "/recepcao", icon: ConciergeBell, title: "Recepção", text: "Abrir permanências, emitir credenciais, receber pagamentos e encerrar contas." },
+  {
+    to: "/atendente",
+    icon: ScanLine,
+    label: "Atendente",
+    title: "Catálogo e propostas",
+    text: "Leia a credencial do hóspede, monte o pedido e envie a proposta para conferência no celular ou no terminal.",
+  },
+  {
+    to: "/recepcao",
+    search: { novo: true },
+    icon: UserPlus,
+    label: "Cliente",
+    title: "Cadastro e estadia",
+    text: "Registre o hóspede, escolha quarto e tipo de permanência — hospedagem ou day use.",
+  },
+  {
+    to: "/terminal",
+    icon: MonitorSmartphone,
+    label: "Terminal",
+    title: "Confirmação na pulseira",
+    text: "Tela voltada ao hóspede: revisão do pedido e confirmação com PIN na pulseira.",
+  },
+  {
+    to: "/recepcao",
+    icon: ConciergeBell,
+    label: "Recepção",
+    title: "Contas e credenciais",
+    text: "Abra e encerre permanências, emita credenciais, receba pagamentos e feche contas.",
+  },
 ] as const;
 
 function InicioPage() {
+  const session = useStaffSession();
+  const firstName = session?.name.split(/[\s(]/)[0] ?? "equipe";
+
   return (
     <StaffLayout>
-      <section className="relative isolate overflow-hidden">
-        <img
-          src={hero}
-          alt="Piscina do Hotel Recanto das Águas ao entardecer"
-          width={1600}
-          height={1008}
-          className="absolute inset-0 -z-20 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-hero-overlay" />
-        <div className="mx-auto flex min-h-[52vh] max-w-7xl flex-col justify-end px-4 pb-14 pt-24 sm:px-6">
-          <p className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary-foreground/90">
-            <Waves className="size-3.5" aria-hidden />
-            Hospedagem &amp; Day use
-          </p>
-          <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-6xl">
-            Painel da equipe
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-primary-foreground/90">
-            O hóspede usa{" "}
-            <Link to="/cliente/entrar" className="underline">
-              /cliente/entrar
-            </Link>{" "}
-            ou QR{" "}
-            <Link to="/acesso" search={{ codigo: "RDA-R4F4-208A" }} className="underline">
-              /acesso
-            </Link>
-            .
-          </p>
-        </div>
-      </section>
+      <div className="staff-home-bara min-h-full">
+        <section className="relative isolate min-h-[min(78vh,44rem)] overflow-hidden">
+          <img
+            src={hero}
+            alt="Piscina do Hotel Recanto das Águas ao entardecer"
+            width={1600}
+            height={1008}
+            className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
+          />
+          <div className="staff-home-hero-overlay absolute inset-0" aria-hidden />
+          <div className="relative mx-auto flex min-h-[min(78vh,44rem)] max-w-7xl flex-col justify-end px-5 pb-20 pt-28 sm:px-8 sm:pb-24">
+            <p className="staff-home-eyebrow mb-6 text-white/80">Recanto das Águas</p>
+            <h1 className="staff-home-title max-w-4xl text-white">
+              <em>Viva o</em>
+              <span className="mt-1 block">recanto</span>
+              <span className="mt-2 block text-[0.55em] font-normal tracking-[0.06em] text-white/90">
+                com a equipe
+              </span>
+            </h1>
+            <p className="mt-8 max-w-md text-base leading-relaxed text-white/85 sm:text-lg">
+              Hospedagem, day use e consumo digital — o mesmo cuidado do resort, na operação do dia a dia.
+            </p>
+            <p className="staff-home-scroll-hint pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2">
+              role para ver mais
+            </p>
+          </div>
+        </section>
 
-      <section className="mx-auto grid max-w-7xl gap-4 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
-        {areas.map((a) => (
-          <Link
-            key={a.to}
-            to={a.to}
-            className="group relative flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-soft transition-all hover:-translate-y-1 hover:border-primary/25 hover:shadow-lift"
-          >
-            <span className="mb-10 grid size-11 place-items-center rounded-xl bg-secondary text-primary transition-colors group-hover:bg-brand-gradient group-hover:text-primary-foreground">
-              <a.icon className="size-5" />
-            </span>
-            <h2 className="text-2xl font-semibold">{a.title}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">{a.text}</p>
-            <ArrowUpRight className="absolute right-5 top-5 size-5 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
-          </Link>
-        ))}
-      </section>
+        <section className="border-t border-stone-200/80 bg-white px-5 py-14 sm:px-8 sm:py-20">
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-12 lg:gap-16 lg:items-end">
+            <h2 className="staff-home-section-title lg:col-span-5">
+              Um painel que convida a vivenciar o novo.
+            </h2>
+            <div className="space-y-4 text-[0.9375rem] leading-relaxed text-stone-600 lg:col-span-7">
+              <p>
+                Olá, <span className="font-semibold text-stone-800">{firstName}</span> — escolha o setor para
+                continuar. O hóspede acessa{" "}
+                <Link to="/cliente/entrar" className="font-medium text-primary underline-offset-4 hover:underline">
+                  /cliente/entrar
+                </Link>{" "}
+                ou o QR em{" "}
+                <Link
+                  to="/acesso"
+                  search={{ codigo: "RDA-R4F4-208A" }}
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  /acesso
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
-        <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-card via-card to-primary/10 p-6 text-sm shadow-soft">
-          <p className="font-semibold text-gradient-brand">Demonstração UC01</p>
-          <p className="mt-1 text-muted-foreground">
-            Hóspede em <Link to="/cliente/entrar" className="font-medium text-primary hover:underline">/cliente/entrar</Link> (
-            <code className="font-mono">RDA-R4F4-208A</code> + PIN <code className="font-mono">1234</code>). Pulseira:{" "}
-            <Link to="/terminal" className="font-medium text-primary hover:underline">/terminal</Link>. Ativar Clara:{" "}
-            <code className="font-mono">RDA-CL4R-208C</code> + <code className="font-mono">482913</code>.
-          </p>
-        </div>
-      </section>
+        <section className="px-5 pb-16 pt-4 sm:px-8 sm:pb-20">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-10 flex flex-col gap-2 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="staff-home-eyebrow text-stone-500">Áreas de trabalho</p>
+                <p className="mt-2 font-sans text-sm text-stone-500">Atalhos equivalentes ao menu lateral</p>
+              </div>
+            </div>
+            <ul className="grid gap-5 sm:grid-cols-2 sm:gap-6 lg:gap-8">
+              {areas.map((a) => {
+                const search = "search" in a ? a.search : undefined;
+                return (
+                  <li key={a.label}>
+                    <Link
+                      to={a.to}
+                      {...(search ? { search } : {})}
+                      className="staff-home-card group flex h-full min-h-[12.5rem] flex-col rounded-sm p-7 sm:p-8"
+                    >
+                      <span className="mb-6 flex items-center justify-between gap-4">
+                        <span className="grid size-10 place-items-center rounded-full border border-stone-200 text-stone-700 transition-colors group-hover:border-primary/30 group-hover:text-primary">
+                          <a.icon className="size-[1.125rem] stroke-[1.35]" aria-hidden />
+                        </span>
+                        <span className="staff-home-eyebrow text-stone-400">{a.label}</span>
+                      </span>
+                      <h3 className="staff-home-card-title text-stone-900">{a.title}</h3>
+                      <p className="mt-3 flex-1 text-sm leading-relaxed text-stone-600">{a.text}</p>
+                      <span className="staff-home-card-cta mt-8 inline-flex items-center gap-2">
+                        Acessar
+                        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
+
+        <section className="border-t border-stone-200/80 bg-white/60 px-5 py-8 sm:px-8">
+          <div className="mx-auto max-w-7xl text-sm text-stone-600">
+            <p className="staff-home-eyebrow mb-3 text-stone-500">Demonstração UC01</p>
+            <p className="leading-relaxed">
+              <Link to="/cliente/entrar" className="font-medium text-primary hover:underline">
+                /cliente/entrar
+              </Link>{" "}
+              <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">
+                RDA-R4F4-208A
+              </code>{" "}
+              + PIN{" "}
+              <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">1234</code>
+              <span className="mx-2 hidden text-stone-300 sm:inline">·</span>
+              <span className="mt-2 block sm:mt-0 sm:inline">
+                Pulseira{" "}
+                <Link to="/terminal" className="font-medium text-primary hover:underline">
+                  /terminal
+                </Link>
+                {" · "}
+                Clara{" "}
+                <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">
+                  RDA-CL4R-208C
+                </code>{" "}
+                +{" "}
+                <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">482913</code>
+              </span>
+            </p>
+          </div>
+        </section>
+      </div>
     </StaffLayout>
   );
 }

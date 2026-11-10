@@ -8,9 +8,11 @@ import {
   LogOut,
   Menu,
   Monitor,
+  PanelLeft,
+  PanelLeftClose,
   RotateCcw,
   ScanLine,
-  Smartphone,
+  UserPlus,
   Waves,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
@@ -29,14 +31,34 @@ import { PROPOSAL_TTL_MS, type ProposalStatus } from "@/lib/domain";
 import { clearStaffSession, staffNavForRole, useStaffSession } from "@/lib/auth";
 import { resetDemo, useNow } from "@/lib/store";
 
+const STAFF_SIDEBAR_KEY = "rda-staff-sidebar-v1";
+type StaffSidebarMode = "full" | "mini" | "hidden";
+
+function readStaffSidebarMode(): StaffSidebarMode {
+  if (typeof window === "undefined") return "full";
+  try {
+    const raw = localStorage.getItem(STAFF_SIDEBAR_KEY);
+    if (raw === "mini" || raw === "hidden" || raw === "full") return raw;
+  } catch {
+    /* ignore */
+  }
+  return "full";
+}
+
+function writeStaffSidebarMode(mode: StaffSidebarMode) {
+  try {
+    localStorage.setItem(STAFF_SIDEBAR_KEY, mode);
+  } catch {
+    /* ignore */
+  }
+}
+
 const staffNavIcon = (to: string) => {
   switch (to) {
     case "/inicio":
       return Home;
     case "/atendente":
       return ScanLine;
-    case "/cliente/entrar":
-      return Smartphone;
     case "/terminal":
       return Monitor;
     case "/recepcao":
@@ -61,73 +83,151 @@ export function StaffLayout({
   const nav = useMemo(() => staffNavForRole(session?.role), [session?.role]);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<StaffSidebarMode>("full");
+
+  useEffect(() => {
+    setSidebarMode(readStaffSidebarMode());
+  }, []);
+
+  const setSidebarModePersist = (mode: StaffSidebarMode) => {
+    setSidebarMode(mode);
+    writeStaffSidebarMode(mode);
+  };
+
+  const sidebarHidden = sidebarMode === "hidden";
+  const sidebarMini = sidebarMode === "mini";
 
   const logout = () => {
     clearStaffSession();
     void navigate({ to: "/login" });
   };
 
+  const navLinkClass = cn(
+    "flex items-center rounded-lg text-sm font-medium text-stone-300 transition-colors hover:bg-white/[0.07] hover:text-stone-100",
+    sidebarMini ? "justify-center px-2 py-2.5 lg:px-2" : "gap-3 px-3 py-2.5",
+  );
+
   const sidebar = (
     <>
-      <Link
-        to={session ? "/inicio" : "/login"}
-        onClick={() => setMobileOpen(false)}
-        className="flex items-center gap-3 border-b border-white/15 px-4 py-4"
+      <div
+        className={cn(
+          "flex items-center border-b border-[var(--staff-sidebar-border)]",
+          sidebarMini ? "justify-center px-2 py-3 lg:flex-col lg:gap-2" : "gap-2 px-3 py-3",
+        )}
       >
-        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15 text-white shadow-soft ring-1 ring-white/20">
-          <Waves className="size-5" />
-        </span>
-        <span className="min-w-0 leading-tight">
-          <span className="block truncate text-base font-semibold tracking-tight text-white">Recanto das Águas</span>
-          {subtitle ? (
-            <span className="block truncate text-xs text-white/75">{subtitle}</span>
-          ) : (
-            <span className="block text-xs text-white/75">Sistema da equipe</span>
+        <Link
+          to={session ? "/inicio" : "/login"}
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "flex min-w-0 flex-1 items-center text-stone-100",
+            sidebarMini ? "justify-center" : "gap-3",
           )}
-        </span>
-      </Link>
+          title="Recanto das Águas"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-stone-800/90 text-stone-100 shadow-soft ring-1 ring-stone-600/50">
+            <Waves className="size-5" />
+          </span>
+          {!sidebarMini ? (
+            <span className="min-w-0 leading-tight">
+              <span className="block truncate text-base font-semibold tracking-tight text-stone-50">
+                Recanto das Águas
+              </span>
+              {subtitle ? (
+                <span className="block truncate text-xs text-stone-400">{subtitle}</span>
+              ) : (
+                <span className="block text-xs text-stone-400">Sistema da equipe</span>
+              )}
+            </span>
+          ) : null}
+        </Link>
+        <div className="hidden shrink-0 lg:block">
+          <button
+            type="button"
+            onClick={() => {
+              if (sidebarMini) setSidebarModePersist("full");
+              else setSidebarModePersist("mini");
+            }}
+            className="grid size-9 place-items-center rounded-lg text-stone-400 transition-colors hover:bg-white/[0.07] hover:text-stone-100"
+            title={sidebarMini ? "Expandir menu" : "Menu só ícones"}
+            aria-label={sidebarMini ? "Expandir menu" : "Recolher menu para ícones"}
+          >
+            <PanelLeft className={cn("size-4", sidebarMini && "opacity-80")} aria-hidden />
+          </button>
+        </div>
+      </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Menu principal">
+      <nav
+        className={cn("flex-1 space-y-1 overflow-y-auto py-4", sidebarMini ? "px-2" : "px-3")}
+        aria-label="Menu principal"
+      >
         {nav.map((n) => {
-          const Icon = staffNavIcon(n.to);
+          const Icon = n.label === "Cliente" ? UserPlus : staffNavIcon(n.to);
+          const search = "search" in n && n.search ? n.search : undefined;
           return (
             <Link
-              key={n.to}
+              key={`${n.to}-${n.label}`}
               to={n.to}
+              {...(search ? { search } : {})}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              title={sidebarMini ? n.label : undefined}
+              className={navLinkClass}
               activeProps={{
-                className: "bg-nav-active-gradient font-semibold text-white shadow-md ring-1 ring-white/25",
+                className: cn(
+                  "bg-staff-nav-active border-l-2 border-stone-300/90 font-semibold text-stone-50 shadow-sm ring-1 ring-stone-600/20",
+                  sidebarMini && "justify-center border-l-0",
+                ),
               }}
             >
               <Icon className="size-4 shrink-0" aria-hidden />
-              {n.label}
+              {sidebarMini ? <span className="sr-only">{n.label}</span> : n.label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="space-y-1 border-t border-white/15 p-3">
-        {session ? (
-          <p className="truncate px-3 py-1.5 text-xs text-white/70" title={session.name}>
+      <div className={cn("space-y-1 border-t border-[var(--staff-sidebar-border)] p-3", sidebarMini && "px-2")}>
+        {session && !sidebarMini ? (
+          <p className="truncate px-3 py-1.5 text-xs text-stone-500" title={session.name}>
             {session.name}
           </p>
         ) : null}
+        <button
+          type="button"
+          onClick={() => setSidebarModePersist("hidden")}
+          className={cn(
+            "hidden w-full items-center rounded-lg px-3 py-2 text-xs text-stone-500 transition-colors hover:bg-white/[0.07] hover:text-stone-200 lg:flex",
+            sidebarMini ? "justify-center px-2" : "gap-2",
+          )}
+          title="Esconder menu"
+        >
+          <PanelLeftClose className="size-4 shrink-0" aria-hidden />
+          {sidebarMini ? <span className="sr-only">Esconder menu</span> : "Esconder menu"}
+        </button>
         {session ? (
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            className={cn(
+              "flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-stone-300 transition-colors hover:bg-white/[0.07] hover:text-stone-50",
+              sidebarMini ? "justify-center px-2" : "gap-3",
+            )}
+            title={sidebarMini ? "Sair" : undefined}
           >
-            <LogOut className="size-4 shrink-0" /> Sair
+            <LogOut className="size-4 shrink-0" aria-hidden />
+            {sidebarMini ? <span className="sr-only">Sair</span> : "Sair"}
           </button>
         ) : (
           <Link
             to="/login"
             onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+            className={cn(
+              "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-stone-200 hover:bg-white/[0.07]",
+              sidebarMini ? "justify-center px-2" : "gap-3",
+            )}
+            title={sidebarMini ? "Entrar" : undefined}
           >
-            <LogIn className="size-4 shrink-0" /> Entrar
+            <LogIn className="size-4 shrink-0" aria-hidden />
+            {sidebarMini ? <span className="sr-only">Entrar</span> : "Entrar"}
           </Link>
         )}
         <button
@@ -135,10 +235,14 @@ export function StaffLayout({
           onClick={() => {
             if (confirm("Restaurar os dados de demonstração?")) resetDemo();
           }}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-          title="Restaurar demonstração"
+          className={cn(
+            "flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-stone-300 transition-colors hover:bg-white/[0.07] hover:text-stone-50",
+            sidebarMini ? "justify-center px-2" : "gap-3",
+          )}
+          title={sidebarMini ? "Restaurar demonstração" : "Restaurar demonstração"}
         >
-          <RotateCcw className="size-4 shrink-0" /> Demo
+          <RotateCcw className="size-4 shrink-0" aria-hidden />
+          {sidebarMini ? <span className="sr-only">Demo</span> : "Demo"}
         </button>
       </div>
     </>
@@ -157,18 +261,34 @@ export function StaffLayout({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[17.5rem] flex-col border-r border-white/10 bg-brand-gradient text-primary-foreground shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 lg:shadow-none",
+          "staff-sidebar bg-staff-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-stone-800 shadow-xl transition-[transform,width] duration-300 ease-out",
+          sidebarMini ? "w-[4.75rem]" : "w-[17.5rem]",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
+          !sidebarHidden && "lg:static lg:z-auto lg:shrink-0 lg:translate-x-0 lg:shadow-none",
+          sidebarHidden && "lg:-translate-x-full",
+          !sidebarMini && !sidebarHidden && "lg:w-64",
+          sidebarMini && !sidebarHidden && "lg:w-[4.75rem]",
         )}
       >
         {sidebar}
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-gradient-surface">
-        <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/80 bg-card/90 bg-gradient-surface px-4 backdrop-blur-sm lg:hidden">
+        <div
+          className={cn(
+            "sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/80 bg-card/90 bg-gradient-surface px-4 backdrop-blur-sm",
+            !sidebarHidden && "lg:hidden",
+          )}
+        >
           <button
             type="button"
-            onClick={() => setMobileOpen(true)}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
+                setSidebarModePersist("full");
+              } else {
+                setMobileOpen(true);
+              }
+            }}
             className="grid size-10 place-items-center rounded-lg border border-border text-foreground"
             aria-label="Abrir menu"
           >
