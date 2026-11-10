@@ -1,17 +1,42 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { requireStaffAuth } from "@/lib/auth";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Ban, BedDouble, CheckCircle2, Minus, Plus, Receipt, Search, Send, ShoppingBag, Sun, Trash2, UserRound } from "lucide-react";
-import { AppHeader, Countdown, EmptyState, Panel, StatusPill, fmtTime } from "@/components/app/shared";
+import {
+  BedDouble,
+  CheckCircle2,
+  CupSoda,
+  Minus,
+  Plus,
+  Receipt,
+  Search,
+  Send,
+  ShoppingBag,
+  Sun,
+  Trash2,
+  UserRound,
+  UtensilsCrossed,
+  Waves,
+} from "lucide-react";
+import { StaffLayout, Countdown, EmptyState, Panel, StatusPill, fmtTime } from "@/components/app/shared";
 import { CredentialReader } from "@/components/app/CredentialReader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { brl, cancelProposal, createProposal, DomainError, resolveCredential, type Category, type Sector } from "@/lib/domain";
+import {
+  brl,
+  cancelProposal,
+  createProposal,
+  DomainError,
+  productsInSector,
+  resolveCredential,
+  type Category,
+  type Sector,
+} from "@/lib/domain";
 import { commit, getState, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/atendente")({
+  beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
   head: () => ({
     meta: [
       { title: "Atendente · Recanto das Águas" },
@@ -25,7 +50,13 @@ export const Route = createFileRoute("/atendente")({
 
 const ATTENDANT = "Lucas (bar)";
 const categories: ("Todos" | Category)[] = ["Todos", "Bebidas", "Drinks", "Porções", "Pratos", "Sobremesas"];
-const sectors: Sector[] = ["Bar da Piscina", "Restaurante", "Lanchonete"];
+
+const sectorNav: { id: Sector; label: string; short: string; icon: typeof Waves }[] = [
+  { id: "Bar da Piscina", label: "Bar da Piscina", short: "Bar", icon: Waves },
+  { id: "Restaurante", label: "Restaurante", short: "Rest.", icon: UtensilsCrossed },
+  { id: "Lanchonete", label: "Lanchonete", short: "Lanche", icon: CupSoda },
+];
+
 const demoCodes = [
   { code: "RDA-R4F4-208A", label: "Rafael · 208 (celular)" },
   { code: "RDA-AN4S-208B", label: "Ana · 208 (pulseira)" },
@@ -57,9 +88,29 @@ function Attendant() {
     }
   }, [credCode, state]);
 
-  const filtered = products.filter(
+  const sectorProducts = useMemo(() => productsInSector(products, sector), [products, sector]);
+
+  const categoryOptions = useMemo((): ("Todos" | Category)[] => {
+    const inMenu = new Set(sectorProducts.map((p) => p.category));
+    const list = categories.slice(1).filter((c) => inMenu.has(c));
+    return ["Todos", ...list];
+  }, [sectorProducts]);
+
+  useEffect(() => {
+    if (cat !== "Todos" && !categoryOptions.includes(cat)) setCat("Todos");
+  }, [categoryOptions, cat]);
+
+  const filtered = sectorProducts.filter(
     (p) => (cat === "Todos" || p.category === cat) && p.name.toLowerCase().includes(query.toLowerCase()),
   );
+
+  const pickSector = (next: Sector) => {
+    if (next === sector) return;
+    setSector(next);
+    setCart({});
+    setCat("Todos");
+    toast.message(`Cardápio do ${next}`);
+  };
   const lines = Object.entries(cart).map(([id, v]) => ({ product: products.find((p) => p.id === id)!, ...v }));
   const total = lines.reduce((a, l) => a + l.product.price * l.qty, 0);
   const tracking = proposals.find((p) => p.id === trackingId);
@@ -107,86 +158,138 @@ function Attendant() {
   };
 
   return (
-    <div className="min-h-screen">
-      <AppHeader subtitle={`Atendimento · ${ATTENDANT}`} />
-      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px]">
-        {/* Catalog */}
-        <div className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar produto" className="h-11 bg-card pl-9" />
-            </div>
-            <Select value={sector} onValueChange={(v) => setSector(v as Sector)}>
-              <SelectTrigger className="h-11 w-full bg-card sm:w-52"><SelectValue /></SelectTrigger>
-              <SelectContent>{sectors.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {categories.map((c) => (
-              <button key={c} onClick={() => setCat(c)} className={cn("shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors", cat === c ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground border")}>
-                {c}
-              </button>
-            ))}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((p) => {
-              const inCart = cart[p.id]?.qty ?? 0;
+    <StaffLayout fillViewport subtitle={`Atendimento · ${ATTENDANT}`}>
+      <main className="mx-auto grid h-full min-h-0 max-w-[100rem] flex-1 gap-3 overflow-hidden px-3 py-3 sm:px-4 lg:grid-cols-[10.5rem_minmax(0,1fr)_20rem] xl:grid-cols-[11rem_minmax(0,1fr)_21rem]">
+        <aside className="flex min-h-0 flex-col lg:h-full">
+          <nav
+            className="flex flex-row gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-card p-1.5 shadow-soft lg:flex-col lg:gap-1 lg:overflow-hidden lg:p-2"
+            aria-label="Setor de atendimento"
+          >
+            <p className="hidden w-full px-1.5 pb-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-muted-foreground lg:block">
+              Setor
+            </p>
+            {sectorNav.map((s) => {
+              const Icon = s.icon;
+              const active = sector === s.id;
               return (
                 <button
-                  key={p.id}
-                  disabled={!p.available}
-                  onClick={() => setQty(p.id, 1)}
+                  key={s.id}
+                  type="button"
+                  onClick={() => pickSector(s.id)}
                   className={cn(
-                    "group relative flex flex-col rounded-2xl border bg-card p-4 text-left shadow-soft transition-all",
-                    p.available ? "hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lift" : "cursor-not-allowed opacity-55",
-                    inCart > 0 && "border-primary ring-2 ring-primary/15",
+                    "flex min-w-[6.5rem] shrink-0 items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-all sm:text-sm lg:min-w-0 lg:w-full",
+                    active
+                      ? "bg-brand-gradient text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:bg-primary/5 hover:text-foreground",
                   )}
                 >
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{p.category}</span>
-                  <span className="mt-1 font-semibold">{p.name}</span>
-                  <span className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{p.description}</span>
-                  <div className="mt-4 flex items-end justify-between">
-                    <span className="tabular font-display text-xl font-semibold text-primary">{brl(p.price)}</span>
-                    {p.available ? (
-                      <span className="grid size-8 place-items-center rounded-full bg-secondary text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground"><Plus className="size-4" /></span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground"><Ban className="size-3" /> Indisponível</span>
-                    )}
-                  </div>
-                  {inCart > 0 && <span className="absolute right-3 top-3 grid size-6 place-items-center rounded-full bg-accent text-xs font-bold text-accent-foreground">{inCart}</span>}
+                  <Icon className="size-4 shrink-0" aria-hidden />
+                  <span className="truncate lg:hidden">{s.short}</span>
+                  <span className="hidden truncate lg:inline">{s.label}</span>
                 </button>
               );
             })}
-          </div>
-          {filtered.length === 0 && <EmptyState icon={<Search className="size-5" />} title="Nenhum produto encontrado" />}
+          </nav>
+        </aside>
 
-          <Panel title="Minhas operações recentes">
-            {myHistory.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma proposta enviada ainda.</p>
+        <div className="flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden">
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Buscar produto"
+                className="h-10 w-full rounded-xl border-border/80 bg-card pl-9 text-sm shadow-sm"
+              />
+            </div>
+            <div className="flex shrink-0 gap-1 overflow-x-auto">
+            {categoryOptions.map((c) => (
+              <button
+                key={c}
+                onClick={() => setCat(c)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all sm:text-sm",
+                  cat === c
+                    ? "border-transparent bg-brand-gradient text-primary-foreground shadow-sm"
+                    : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                )}
+              >
+                {c}
+              </button>
+            ))}
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {filtered.length === 0 ? (
+              <EmptyState icon={<Search className="size-5" />} title="Nenhum produto encontrado" />
             ) : (
-              <ul className="divide-y">
+              <div className="grid h-full auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                {filtered.map((p) => {
+                  const inCart = cart[p.id]?.qty ?? 0;
+                  return (
+                    <button
+                      key={p.id}
+                      disabled={!p.available}
+                      onClick={() => setQty(p.id, 1)}
+                      className={cn(
+                        "group relative flex min-h-0 flex-col justify-between rounded-xl border border-border/80 bg-card p-2.5 text-left shadow-soft transition-all",
+                        p.available ? "hover:border-primary/35 hover:shadow-md" : "cursor-not-allowed opacity-55",
+                        inCart > 0 && "border-primary ring-1 ring-primary/20",
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">{p.category}</span>
+                        <span className="mt-0.5 line-clamp-2 text-xs font-semibold leading-tight sm:text-sm">{p.name}</span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between gap-1">
+                        <span className="tabular text-sm font-bold text-primary sm:text-base">{brl(p.price)}</span>
+                        {p.available ? (
+                          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-primary transition-all group-hover:bg-brand-gradient group-hover:text-primary-foreground">
+                            <Plus className="size-3.5" />
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-muted-foreground">—</span>
+                        )}
+                      </div>
+                      {inCart > 0 && (
+                        <span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-accent text-[10px] font-bold text-accent-foreground">
+                          {inCart}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          {myHistory.length > 0 && (
+            <details className="shrink-0 rounded-xl border border-border/80 bg-card px-3 py-2 text-xs shadow-soft">
+              <summary className="cursor-pointer font-medium text-muted-foreground">Operações recentes ({myHistory.length})</summary>
+              <ul className="mt-2 max-h-24 divide-y overflow-y-auto">
                 {myHistory.map((p) => {
                   const st = state.stays.find((s) => s.id === p.stayId);
                   return (
                     <li key={p.id}>
-                      <button onClick={() => setTrackingId(p.id)} className="flex w-full items-center gap-3 py-2.5 text-left text-sm hover:text-primary">
-                        <span className="w-20 shrink-0 font-mono text-xs text-muted-foreground">{fmtTime(p.createdAt).split(" ")[1]}</span>
-                        <span className="flex-1 truncate">{st?.room ? `Quarto ${st.room}` : "Day use"} · {p.items.length} itens</span>
-                        <span className="tabular font-semibold">{brl(p.total)}</span>
-                        <StatusPill status={p.status} />
+                      <button
+                        type="button"
+                        onClick={() => setTrackingId(p.id)}
+                        className="flex w-full items-center gap-2 py-1.5 text-left hover:text-primary"
+                      >
+                        <span className="font-mono text-[10px] text-muted-foreground">{fmtTime(p.createdAt).split(" ")[1]}</span>
+                        <span className="min-w-0 flex-1 truncate">{st?.room ? `Q. ${st.room}` : "Day use"}</span>
+                        <StatusPill status={p.status} className="scale-90" />
                       </button>
                     </li>
                   );
                 })}
               </ul>
-            )}
-          </Panel>
+            </details>
+          )}
         </div>
 
-        {/* Order side */}
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <Panel title="1 · Identificar consumidor">
+        <aside className="flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden">
+          <Panel title="1 · Identificar consumidor" className="shrink-0 [&>div:last-child]:p-3.5">
             <CredentialReader onRead={read} demoCodes={demoCodes} />
             {identified && "error" in identified && <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{identified.error}</p>}
             {identified && "cred" in identified && (
@@ -204,11 +307,15 @@ function Attendant() {
             )}
           </Panel>
 
-          <Panel title="2 · Pedido" action={lines.length > 0 && <button onClick={() => setCart({})} className="text-xs text-muted-foreground hover:text-destructive">Limpar</button>}>
+          <Panel
+            title="2 · Pedido"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden [&>div:last-child]:flex [&>div:last-child]:min-h-0 [&>div:last-child]:flex-1 [&>div:last-child]:flex-col"
+            action={lines.length > 0 && <button onClick={() => setCart({})} className="text-xs text-muted-foreground hover:text-destructive">Limpar</button>}
+          >
             {lines.length === 0 ? (
-              <EmptyState icon={<ShoppingBag className="size-5" />} title="Carrinho vazio" hint="Toque nos produtos do catálogo para adicionar." />
+              <EmptyState icon={<ShoppingBag className="size-4" />} title="Carrinho vazio" hint="Toque nos produtos." />
             ) : (
-              <div className="space-y-3">
+              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
                 {lines.map((l) => (
                   <div key={l.product.id} className="space-y-1.5">
                     <div className="flex items-center gap-2">
@@ -228,19 +335,23 @@ function Attendant() {
                     />
                   </div>
                 ))}
-                <div className="flex items-baseline justify-between border-t pt-3">
-                  <span className="text-sm text-muted-foreground">Total</span>
-                  <span className="tabular font-display text-2xl font-semibold">{brl(total)}</span>
+                <div className="flex items-baseline justify-between border-t pt-2">
+                  <span className="text-xs text-muted-foreground">Total</span>
+                  <span className="tabular font-display text-xl font-semibold">{brl(total)}</span>
                 </div>
               </div>
             )}
-            <Button onClick={send} disabled={!identified || "error" in identified || lines.length === 0} className="mt-4 h-12 w-full gap-2 text-base">
+            <Button
+              onClick={send}
+              disabled={!identified || "error" in identified || lines.length === 0}
+              className="mt-2 h-10 shrink-0 w-full gap-2 rounded-xl text-sm font-semibold shadow-md"
+            >
               <Send className="size-4" /> Enviar para confirmação
             </Button>
           </Panel>
 
           {tracking && (
-            <Panel title="3 · Acompanhamento" action={<StatusPill status={tracking.status} />}>
+            <Panel title="3 · Acompanhamento" className="shrink-0" action={<StatusPill status={tracking.status} />}>
               {tracking.status === "aguardando" && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 rounded-xl bg-warning/15 p-3 text-sm">
@@ -269,6 +380,6 @@ function Attendant() {
           )}
         </aside>
       </main>
-    </div>
+    </StaffLayout>
   );
 }

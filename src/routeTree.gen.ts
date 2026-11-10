@@ -10,14 +10,27 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AcessoRouteImport } from './routes/acesso'
 import { Route as AtendenteRouteImport } from './routes/atendente'
 import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as InicioRouteImport } from './routes/inicio'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecepcaoRouteImport } from './routes/recepcao'
 import { Route as TerminalRouteImport } from './routes/terminal'
+import { Route as ClienteIndexRouteImport } from './routes/cliente/index'
+import { Route as ClienteAtivarRouteImport } from './routes/cliente/ativar'
+import { Route as ClienteCadastroRouteImport } from './routes/cliente/cadastro'
+import { Route as ClienteEntrarRouteImport } from './routes/cliente/entrar'
+import { Route as RecepcaoCadastroRouteImport } from './routes/recepcao/cadastro'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AcessoRoute = AcessoRouteImport.update({
+  id: '/acesso',
+  path: '/acesso',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AtendenteRoute = AtendenteRouteImport.update({
@@ -30,6 +43,16 @@ const ClienteRoute = ClienteRouteImport.update({
   path: '/cliente',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InicioRoute = InicioRouteImport.update({
+  id: '/inicio',
+  path: '/inicio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecepcaoRoute = RecepcaoRouteImport.update({
   id: '/recepcao',
   path: '/recepcao',
@@ -40,42 +63,132 @@ const TerminalRoute = TerminalRouteImport.update({
   path: '/terminal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClienteIndexRoute = ClienteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteAtivarRoute = ClienteAtivarRouteImport.update({
+  id: '/ativar',
+  path: '/ativar',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteCadastroRoute = ClienteCadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const ClienteEntrarRoute = ClienteEntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => ClienteRoute,
+} as any)
+const RecepcaoCadastroRoute = RecepcaoCadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => RecepcaoRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/acesso': typeof AcessoRoute
   '/atendente': typeof AtendenteRoute
-  '/cliente': typeof ClienteRoute
-  '/recepcao': typeof RecepcaoRoute
+  '/cliente': typeof ClienteRouteWithChildren
+  '/inicio': typeof InicioRoute
+  '/login': typeof LoginRoute
+  '/recepcao': typeof RecepcaoRouteWithChildren
   '/terminal': typeof TerminalRoute
+  '/cliente/ativar': typeof ClienteAtivarRoute
+  '/cliente/cadastro': typeof ClienteCadastroRoute
+  '/cliente/entrar': typeof ClienteEntrarRoute
+  '/recepcao/cadastro': typeof RecepcaoCadastroRoute
+  '/cliente/': typeof ClienteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/acesso': typeof AcessoRoute
   '/atendente': typeof AtendenteRoute
-  '/cliente': typeof ClienteRoute
-  '/recepcao': typeof RecepcaoRoute
+  '/inicio': typeof InicioRoute
+  '/login': typeof LoginRoute
+  '/recepcao': typeof RecepcaoRouteWithChildren
   '/terminal': typeof TerminalRoute
+  '/cliente/ativar': typeof ClienteAtivarRoute
+  '/cliente/cadastro': typeof ClienteCadastroRoute
+  '/cliente/entrar': typeof ClienteEntrarRoute
+  '/recepcao/cadastro': typeof RecepcaoCadastroRoute
+  '/cliente': typeof ClienteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/acesso': typeof AcessoRoute
   '/atendente': typeof AtendenteRoute
-  '/cliente': typeof ClienteRoute
-  '/recepcao': typeof RecepcaoRoute
+  '/cliente': typeof ClienteRouteWithChildren
+  '/inicio': typeof InicioRoute
+  '/login': typeof LoginRoute
+  '/recepcao': typeof RecepcaoRouteWithChildren
   '/terminal': typeof TerminalRoute
+  '/cliente/ativar': typeof ClienteAtivarRoute
+  '/cliente/cadastro': typeof ClienteCadastroRoute
+  '/cliente/entrar': typeof ClienteEntrarRoute
+  '/recepcao/cadastro': typeof RecepcaoCadastroRoute
+  '/cliente/': typeof ClienteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/atendente' | '/cliente' | '/recepcao' | '/terminal'
+  fullPaths:
+    | '/'
+    | '/acesso'
+    | '/atendente'
+    | '/cliente'
+    | '/inicio'
+    | '/login'
+    | '/recepcao'
+    | '/terminal'
+    | '/cliente/ativar'
+    | '/cliente/cadastro'
+    | '/cliente/entrar'
+    | '/recepcao/cadastro'
+    | '/cliente/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/atendente' | '/cliente' | '/recepcao' | '/terminal'
-  id: '__root__' | '/' | '/atendente' | '/cliente' | '/recepcao' | '/terminal'
+  to:
+    | '/'
+    | '/acesso'
+    | '/atendente'
+    | '/inicio'
+    | '/login'
+    | '/recepcao'
+    | '/terminal'
+    | '/cliente/ativar'
+    | '/cliente/cadastro'
+    | '/cliente/entrar'
+    | '/recepcao/cadastro'
+    | '/cliente'
+  id:
+    | '__root__'
+    | '/'
+    | '/acesso'
+    | '/atendente'
+    | '/cliente'
+    | '/inicio'
+    | '/login'
+    | '/recepcao'
+    | '/terminal'
+    | '/cliente/ativar'
+    | '/cliente/cadastro'
+    | '/cliente/entrar'
+    | '/recepcao/cadastro'
+    | '/cliente/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AcessoRoute: typeof AcessoRoute
   AtendenteRoute: typeof AtendenteRoute
-  ClienteRoute: typeof ClienteRoute
-  RecepcaoRoute: typeof RecepcaoRoute
+  ClienteRoute: typeof ClienteRouteWithChildren
+  InicioRoute: typeof InicioRoute
+  LoginRoute: typeof LoginRoute
+  RecepcaoRoute: typeof RecepcaoRouteWithChildren
   TerminalRoute: typeof TerminalRoute
 }
 
@@ -86,6 +199,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acesso': {
+      id: '/acesso'
+      path: '/acesso'
+      fullPath: '/acesso'
+      preLoaderRoute: typeof AcessoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/atendente': {
@@ -102,6 +222,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClienteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inicio': {
+      id: '/inicio'
+      path: '/inicio'
+      fullPath: '/inicio'
+      preLoaderRoute: typeof InicioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recepcao': {
       id: '/recepcao'
       path: '/recepcao'
@@ -116,14 +250,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TerminalRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cliente/': {
+      id: '/cliente/'
+      path: '/'
+      fullPath: '/cliente/'
+      preLoaderRoute: typeof ClienteIndexRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/ativar': {
+      id: '/cliente/ativar'
+      path: '/ativar'
+      fullPath: '/cliente/ativar'
+      preLoaderRoute: typeof ClienteAtivarRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/cadastro': {
+      id: '/cliente/cadastro'
+      path: '/cadastro'
+      fullPath: '/cliente/cadastro'
+      preLoaderRoute: typeof ClienteCadastroRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/cliente/entrar': {
+      id: '/cliente/entrar'
+      path: '/entrar'
+      fullPath: '/cliente/entrar'
+      preLoaderRoute: typeof ClienteEntrarRouteImport
+      parentRoute: typeof ClienteRoute
+    }
+    '/recepcao/cadastro': {
+      id: '/recepcao/cadastro'
+      path: '/cadastro'
+      fullPath: '/recepcao/cadastro'
+      preLoaderRoute: typeof RecepcaoCadastroRouteImport
+      parentRoute: typeof RecepcaoRoute
+    }
   }
 }
 
+interface ClienteRouteChildren {
+  ClienteAtivarRoute: typeof ClienteAtivarRoute
+  ClienteCadastroRoute: typeof ClienteCadastroRoute
+  ClienteEntrarRoute: typeof ClienteEntrarRoute
+  ClienteIndexRoute: typeof ClienteIndexRoute
+}
+
+const ClienteRouteChildren: ClienteRouteChildren = {
+  ClienteAtivarRoute: ClienteAtivarRoute,
+  ClienteCadastroRoute: ClienteCadastroRoute,
+  ClienteEntrarRoute: ClienteEntrarRoute,
+  ClienteIndexRoute: ClienteIndexRoute,
+}
+
+const ClienteRouteWithChildren =
+  ClienteRoute._addFileChildren(ClienteRouteChildren)
+
+interface RecepcaoRouteChildren {
+  RecepcaoCadastroRoute: typeof RecepcaoCadastroRoute
+}
+
+const RecepcaoRouteChildren: RecepcaoRouteChildren = {
+  RecepcaoCadastroRoute: RecepcaoCadastroRoute,
+}
+
+const RecepcaoRouteWithChildren = RecepcaoRoute._addFileChildren(
+  RecepcaoRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AcessoRoute: AcessoRoute,
   AtendenteRoute: AtendenteRoute,
-  ClienteRoute: ClienteRoute,
-  RecepcaoRoute: RecepcaoRoute,
+  ClienteRoute: ClienteRouteWithChildren,
+  InicioRoute: InicioRoute,
+  LoginRoute: LoginRoute,
+  RecepcaoRoute: RecepcaoRouteWithChildren,
   TerminalRoute: TerminalRoute,
 }
 export const routeTree = rootRouteImport

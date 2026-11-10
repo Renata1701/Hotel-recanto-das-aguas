@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -34,8 +34,7 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
-  --color-lagoon: var(--lagoon);
-  --color-sand: var(--sand);
+  --color-highlight: var(--highlight);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -57,50 +56,58 @@
   --shadow-lift: var(--shadow-lift-v);
 }
 
+/* Paleta resort — azul #1E40AF, branco e cinza. */
 :root {
-  --radius: 0.875rem;
-  --background: oklch(0.975 0.012 85);
-  --foreground: oklch(0.25 0.04 220);
-  --card: oklch(0.993 0.006 85);
-  --card-foreground: oklch(0.25 0.04 220);
-  --popover: oklch(0.993 0.006 85);
-  --popover-foreground: oklch(0.25 0.04 220);
-  --primary: oklch(0.42 0.085 205);
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.935 0.025 85);
-  --secondary-foreground: oklch(0.3 0.05 215);
-  --muted: oklch(0.945 0.015 85);
-  --muted-foreground: oklch(0.5 0.03 220);
-  --accent: oklch(0.7 0.14 45);
-  --accent-foreground: oklch(0.99 0.01 85);
-  --destructive: oklch(0.57 0.2 27);
-  --destructive-foreground: oklch(0.99 0.01 85);
-  --success: oklch(0.58 0.12 160);
-  --success-foreground: oklch(0.99 0.01 85);
-  --warning: oklch(0.8 0.14 80);
-  --warning-foreground: oklch(0.3 0.06 60);
-  --lagoon: oklch(0.82 0.08 195);
-  --sand: oklch(0.9 0.04 80);
-  --border: oklch(0.89 0.02 85);
-  --input: oklch(0.88 0.02 85);
-  --ring: oklch(0.55 0.09 205);
-  --chart-1: oklch(0.42 0.085 205);
-  --chart-2: oklch(0.7 0.14 45);
-  --chart-3: oklch(0.58 0.12 160);
-  --chart-4: oklch(0.8 0.14 80);
-  --chart-5: oklch(0.6 0.1 250);
-  --sidebar: oklch(0.3 0.06 210);
-  --sidebar-foreground: oklch(0.95 0.015 85);
-  --sidebar-primary: oklch(0.7 0.14 45);
-  --sidebar-primary-foreground: oklch(0.99 0.01 85);
-  --sidebar-accent: oklch(0.36 0.06 210);
-  --sidebar-accent-foreground: oklch(0.97 0.01 85);
-  --sidebar-border: oklch(0.38 0.05 210);
-  --sidebar-ring: oklch(0.7 0.14 45);
-  --gradient-lagoon: linear-gradient(135deg, oklch(0.42 0.085 205), oklch(0.55 0.1 190));
-  --gradient-dusk: linear-gradient(180deg, transparent, oklch(0.2 0.05 220 / 0.85));
-  --shadow-soft-v: 0 1px 2px oklch(0.25 0.04 220 / 0.05), 0 8px 24px -12px oklch(0.25 0.04 220 / 0.18);
-  --shadow-lift-v: 0 20px 50px -20px oklch(0.3 0.08 205 / 0.45);
+  --radius: 0.75rem;
+  --background: #f3f4f6;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #1e40af;
+  --primary-foreground: #ffffff;
+  --secondary: #e5e7eb;
+  --secondary-foreground: #374151;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --success: hsl(152 56% 32%);
+  --success-foreground: hsl(0 0% 100%);
+  --warning: hsl(42 85% 48%);
+  --warning-foreground: hsl(220 9% 18%);
+  --highlight: #dbeafe;
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #1e40af;
+  --chart-1: #1e40af;
+  --chart-2: #3b82f6;
+  --chart-3: #111827;
+  --chart-4: hsl(42 85% 48%);
+  --chart-5: #6b7280;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #1e40af;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #3b82f6;
+  --gradient-brand: linear-gradient(145deg, #0f172a 0%, #1e3a8a 38%, #2563eb 72%, #60a5fa 100%);
+  --gradient-brand-horizontal: linear-gradient(90deg, #0f172a 0%, #1e40af 45%, #3b82f6 100%);
+  --gradient-surface: linear-gradient(180deg, #dbeafe 0%, #eff6ff 28%, #f3f4f6 55%, #f8fafc 100%);
+  --gradient-hero-overlay: linear-gradient(
+    165deg,
+    rgb(15 23 42 / 0.35) 0%,
+    rgb(30 58 138 / 0.75) 45%,
+    rgb(37 99 235 / 0.55) 100%
+  );
+  --gradient-nav-active: linear-gradient(90deg, #1e3a8a 0%, #2563eb 55%, #60a5fa 100%);
+  --shadow-soft-v: 0 1px 2px rgb(17 24 39 / 0.05), 0 1px 3px rgb(17 24 39 / 0.04);
+  --shadow-lift-v: 0 12px 32px -8px rgb(30 64 175 / 0.14), 0 4px 12px rgb(17 24 39 / 0.06);
 }
 
 @layer base {
@@ -108,31 +115,139 @@
     border-color: var(--color-border);
   }
   body {
-    background-color: var(--color-background);
+    background: var(--gradient-surface);
+    background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }
 }
 
-@utility bg-lagoon-gradient {
-  background-image: var(--gradient-lagoon);
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
 }
-@utility bg-dusk {
-  background-image: var(--gradient-dusk);
+@utility bg-brand-gradient-h {
+  background-image: var(--gradient-brand-horizontal);
+}
+@utility bg-gradient-surface {
+  background-image: var(--gradient-surface);
+}
+@utility bg-nav-active-gradient {
+  background-image: var(--gradient-nav-active);
+}
+@utility bg-hero-overlay {
+  background-image: var(--gradient-hero-overlay);
+}
+@utility text-gradient-brand {
+  background-image: var(--gradient-brand-horizontal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 @utility tabular {
   font-variant-numeric: tabular-nums;
 }
 
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--warning) 60%, transparent); }
-  100% { box-shadow: 0 0 0 14px transparent; }
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--warning) 60%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
 }
 @utility animate-pulse-ring {
   animation: pulse-ring 1.6s ease-out infinite;
+}
+
+/* Login split-screen — azul corporativo #1E40AF (escopo local). */
+.login-resort {
+  --login-primary: #1e40af;
+  --login-primary-hover: #1e3a8a;
+  --login-focus: #dbeafe;
+  --login-surface: #f3f4f6;
+  --login-card: #ffffff;
+  --login-ink: #111827;
+  --login-muted: #6b7280;
+  --login-border: #e5e7eb;
+  --login-input-bg: #f3f4f6;
+  --login-shadow: 0 4px 24px rgb(30 64 175 / 0.08), 0 2px 8px rgb(17 24 39 / 0.04);
+  font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  color: var(--login-ink);
+  background: var(--login-surface);
+}
+
+.login-resort-hero-overlay {
+  background: linear-gradient(
+    145deg,
+    rgb(15 23 42 / 0.88) 0%,
+    rgb(30 58 138 / 0.78) 40%,
+    rgb(37 99 235 / 0.62) 100%
+  );
+}
+
+.login-resort-card {
+  background: var(--login-card);
+  border: 1px solid var(--login-border);
+  box-shadow: var(--login-shadow);
+}
+
+.login-resort-input {
+  height: 2.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--login-border);
+  background: var(--login-input-bg);
+  padding-left: 2.75rem;
+  font-size: 0.9375rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.login-resort-input::placeholder {
+  color: hsl(215 12% 62%);
+}
+
+.login-resort-input:focus-visible {
+  outline: none;
+  border-color: var(--login-primary);
+  box-shadow: 0 0 0 3px var(--login-focus);
+  background: #ffffff;
+}
+
+.login-resort-btn {
+  height: 2.875rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #ffffff;
+  background-image: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #60a5fa 100%);
+  box-shadow: 0 4px 14px rgb(30 64 175 / 0.28);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
+}
+
+.login-resort-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgb(30 64 175 / 0.38);
+  transform: translateY(-1px);
+}
+
+.login-resort-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.login-resort-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }

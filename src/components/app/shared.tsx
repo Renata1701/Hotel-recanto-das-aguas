@@ -1,62 +1,191 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { QRCodeSVG } from "qrcode.react";
 import Barcode from "react-barcode";
-import { Waves, RotateCcw } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  ConciergeBell,
+  Home,
+  LogIn,
+  LogOut,
+  Menu,
+  Monitor,
+  RotateCcw,
+  ScanLine,
+  Smartphone,
+  Waves,
+} from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  guestAccessUrl,
+  isLocalDevHost,
+  normalizeCredentialCode,
+  normalizeQrOrigin,
+  resolveGuestQrOrigin,
+  setStoredQrOrigin,
+} from "@/lib/guest-access-url";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PROPOSAL_TTL_MS, type ProposalStatus } from "@/lib/domain";
+import { clearStaffSession, staffNavForRole, useStaffSession } from "@/lib/auth";
 import { resetDemo, useNow } from "@/lib/store";
 
-const nav = [
-  { to: "/atendente", label: "Atendente" },
-  { to: "/cliente", label: "Cliente" },
-  { to: "/terminal", label: "Terminal" },
-  { to: "/recepcao", label: "Recepção" },
-] as const;
+const staffNavIcon = (to: string) => {
+  switch (to) {
+    case "/inicio":
+      return Home;
+    case "/atendente":
+      return ScanLine;
+    case "/cliente/entrar":
+      return Smartphone;
+    case "/terminal":
+      return Monitor;
+    case "/recepcao":
+      return ConciergeBell;
+    default:
+      return Home;
+  }
+};
 
-export function AppHeader({ subtitle }: { subtitle?: string }) {
-  return (
-    <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-xl bg-lagoon-gradient text-primary-foreground shadow-soft">
-            <Waves className="size-5" />
-          </span>
-          <span className="leading-tight">
-            <span className="block font-display text-lg font-semibold">Recanto das Águas</span>
-            {subtitle && <span className="block text-xs text-muted-foreground">{subtitle}</span>}
-          </span>
-        </Link>
-        <nav className="ml-auto hidden items-center gap-1 md:flex">
-          {nav.map((n) => (
+/** Layout da equipe: logo, navegação, usuário e ações no menu lateral. */
+export function StaffLayout({
+  subtitle,
+  children,
+  /** Conteúdo ocupa só a altura da tela, sem scroll da página (ex.: atendente). */
+  fillViewport,
+}: {
+  subtitle?: string;
+  children: ReactNode;
+  fillViewport?: boolean;
+}) {
+  const session = useStaffSession();
+  const nav = useMemo(() => staffNavForRole(session?.role), [session?.role]);
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const logout = () => {
+    clearStaffSession();
+    void navigate({ to: "/login" });
+  };
+
+  const sidebar = (
+    <>
+      <Link
+        to={session ? "/inicio" : "/login"}
+        onClick={() => setMobileOpen(false)}
+        className="flex items-center gap-3 border-b border-white/15 px-4 py-4"
+      >
+        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/15 text-white shadow-soft ring-1 ring-white/20">
+          <Waves className="size-5" />
+        </span>
+        <span className="min-w-0 leading-tight">
+          <span className="block truncate text-base font-semibold tracking-tight text-white">Recanto das Águas</span>
+          {subtitle ? (
+            <span className="block truncate text-xs text-white/75">{subtitle}</span>
+          ) : (
+            <span className="block text-xs text-white/75">Sistema da equipe</span>
+          )}
+        </span>
+      </Link>
+
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label="Menu principal">
+        {nav.map((n) => {
+          const Icon = staffNavIcon(n.to);
+          return (
             <Link
               key={n.to}
               to={n.to}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              activeProps={{ className: "bg-secondary text-foreground" }}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              activeProps={{
+                className: "bg-nav-active-gradient font-semibold text-white shadow-md ring-1 ring-white/25",
+              }}
             >
+              <Icon className="size-4 shrink-0" aria-hidden />
               {n.label}
             </Link>
-          ))}
-        </nav>
+          );
+        })}
+      </nav>
+
+      <div className="space-y-1 border-t border-white/15 p-3">
+        {session ? (
+          <p className="truncate px-3 py-1.5 text-xs text-white/70" title={session.name}>
+            {session.name}
+          </p>
+        ) : null}
+        {session ? (
+          <button
+            type="button"
+            onClick={logout}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <LogOut className="size-4 shrink-0" /> Sair
+          </button>
+        ) : (
+          <Link
+            to="/login"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white hover:bg-white/10"
+          >
+            <LogIn className="size-4 shrink-0" /> Entrar
+          </Link>
+        )}
         <button
+          type="button"
           onClick={() => {
             if (confirm("Restaurar os dados de demonstração?")) resetDemo();
           }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs text-muted-foreground hover:bg-secondary md:ml-0"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
           title="Restaurar demonstração"
         >
-          <RotateCcw className="size-3.5" /> Demo
+          <RotateCcw className="size-4 shrink-0" /> Demo
         </button>
       </div>
-      <nav className="flex gap-1 overflow-x-auto border-t px-4 py-2 md:hidden">
-        {nav.map((n) => (
-          <Link key={n.to} to={n.to} className="shrink-0 rounded-lg px-3 py-1.5 text-sm text-muted-foreground" activeProps={{ className: "bg-secondary text-foreground" }}>
-            {n.label}
-          </Link>
-        ))}
-      </nav>
-    </header>
+    </>
+  );
+
+  return (
+    <div className="flex h-dvh max-h-dvh overflow-hidden lg:flex">
+      {mobileOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-foreground/40 lg:hidden"
+          aria-label="Fechar menu"
+          onClick={() => setMobileOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex w-[17.5rem] flex-col border-r border-white/10 bg-brand-gradient text-primary-foreground shadow-xl transition-transform duration-200 lg:static lg:z-auto lg:w-64 lg:shrink-0 lg:translate-x-0 lg:shadow-none",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        {sidebar}
+      </aside>
+
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-gradient-surface">
+        <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/80 bg-card/90 bg-gradient-surface px-4 backdrop-blur-sm lg:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="grid size-10 place-items-center rounded-lg border border-border text-foreground"
+            aria-label="Abrir menu"
+          >
+            <Menu className="size-5" />
+          </button>
+          <span className="truncate font-semibold">Recanto das Águas</span>
+        </div>
+        <div
+          className={cn(
+            "min-h-0 flex-1",
+            fillViewport ? "flex flex-col overflow-hidden" : "overflow-y-auto",
+          )}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -100,20 +229,98 @@ export function Countdown({ expiresAt }: { expiresAt: number }) {
 }
 
 export function CredentialCodes({ code, compact }: { code: string; compact?: boolean }) {
+  const credential = normalizeCredentialCode(code);
+  const [qrOrigin, setQrOrigin] = useState<string | null>(null);
+  const [originDraft, setOriginDraft] = useState("");
+  const [showOriginHelp, setShowOriginHelp] = useState(false);
+
+  const scanUrl = guestAccessUrl(credential, qrOrigin);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const origin = await resolveGuestQrOrigin();
+      if (cancelled) return;
+      setQrOrigin(origin);
+      if (!origin && typeof window !== "undefined" && isLocalDevHost(window.location.hostname)) {
+        setShowOriginHelp(true);
+        const port = window.location.port ? `:${window.location.port}` : "";
+        setOriginDraft(`http://192.168.0.0${port}`);
+      }
+    };
+    void load();
+
+    const onOrigin = () => void load();
+    window.addEventListener("rda-qr-origin", onOrigin);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("rda-qr-origin", onOrigin);
+    };
+  }, []);
+
+  const applyOrigin = () => {
+    const next = setStoredQrOrigin(originDraft);
+    if (!next) return;
+    setQrOrigin(next);
+    setShowOriginHelp(false);
+  };
+
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-4">
-      <QRCodeSVG value={code} size={compact ? 120 : 180} level="M" />
-      <Barcode value={code} format="CODE128" height={compact ? 40 : 56} width={1.4} fontSize={12} margin={0} background="transparent" />
+      {showOriginHelp && (
+        <div className="w-full rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-left text-xs text-foreground">
+          <p className="font-semibold">Celular não abre localhost</p>
+          <p className="mt-1 text-muted-foreground">
+            Use o IP do PC na mesma rede Wi‑Fi (ex.: <span className="font-mono">http://192.168.1.10:8080</span>). Abra
+            esse endereço no celular uma vez para testar.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Input
+              value={originDraft}
+              onChange={(e) => setOriginDraft(e.target.value)}
+              className="h-9 font-mono text-xs"
+              placeholder="http://192.168.1.10:8080"
+              aria-label="Endereço do app no celular"
+            />
+            <Button type="button" size="sm" className="shrink-0" onClick={applyOrigin}>
+              Aplicar
+            </Button>
+          </div>
+        </div>
+      )}
+      {scanUrl ? (
+        <>
+          <QRCodeSVG value={scanUrl} size={compact ? 120 : 180} level="M" includeMargin />
+          <p className="max-w-full break-all text-center text-[10px] leading-snug text-muted-foreground">{scanUrl}</p>
+        </>
+      ) : (
+        <p className="py-6 text-center text-xs text-muted-foreground">Defina o endereço acima para gerar o QR do celular.</p>
+      )}
+      <p className="text-center text-xs text-muted-foreground">No celular: câmera abre ativação ou entrada do hóspede.</p>
+      {!showOriginHelp && qrOrigin && typeof window !== "undefined" && isLocalDevHost(window.location.hostname) && (
+        <button
+          type="button"
+          className="text-[10px] text-primary hover:underline"
+          onClick={() => {
+            setOriginDraft(qrOrigin);
+            setShowOriginHelp(true);
+          }}
+        >
+          Alterar endereço do QR ({normalizeQrOrigin(qrOrigin) ?? qrOrigin})
+        </button>
+      )}
+      <Barcode value={credential} format="CODE128" height={compact ? 40 : 56} width={1.4} fontSize={12} margin={0} background="transparent" />
+      <p className="text-center text-[10px] text-muted-foreground">Código de barras para leitor do atendente / terminal.</p>
     </div>
   );
 }
 
 export function Panel({ title, action, children, className }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section className={cn("rounded-2xl border bg-card shadow-soft", className)}>
+    <section className={cn("rounded-2xl border border-border/90 bg-card shadow-soft", className)}>
       {(title || action) && (
-        <div className="flex items-center justify-between gap-3 border-b px-5 py-3.5">
-          <h2 className="font-sans text-sm font-semibold tracking-normal">{title}</h2>
+        <div className="flex items-center justify-between gap-3 border-b border-border/80 px-5 py-3.5">
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
           {action}
         </div>
       )}
@@ -124,7 +331,7 @@ export function Panel({ title, action, children, className }: { title?: ReactNod
 
 export function EmptyState({ icon, title, hint }: { icon: ReactNode; title: string; hint?: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 py-8 text-center">
+    <div className="flex flex-col items-center gap-2 py-4 text-center">
       <div className="grid size-12 place-items-center rounded-full bg-secondary text-muted-foreground">{icon}</div>
       <p className="text-sm font-medium">{title}</p>
       {hint && <p className="max-w-xs text-xs text-muted-foreground">{hint}</p>}

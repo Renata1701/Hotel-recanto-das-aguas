@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "pack:infinityfree": "powershell -NoProfile -Command \"Compress-Archive -Path 'deploy/infinityfree/htdocs/*' -DestinationPath 'deploy/infinityfree/sitema-hotel-upload.zip' -Force\""
   },
   "overrides": {
     "rolldown": "1.2.1"
