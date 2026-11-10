@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BedDouble, Wallet } from "lucide-react";
+import { BedDouble, UserPlus, Wallet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { StaffLayout, CredentialCodes, EmptyState, Panel } from "@/components/app/shared";
+import { StaffLayout, EmptyState, Panel } from "@/components/app/shared";
 import { requireStaffAuth, useStaffSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +13,11 @@ import {
   blockCredential,
   brl,
   closeStay,
-  openStay,
   registerPayment,
   reissueCredential,
-  type CredentialMedium,
   type PaymentMethod,
-  type StayType,
 } from "@/lib/domain";
-import { commit, getState, useStore } from "@/lib/store";
+import { commit, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/recepcao")({
   beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
@@ -38,35 +35,10 @@ function RecepcaoPage() {
   const state = useStore((s) => s);
   const actor = session?.name ?? "Recepção";
 
-  const [type, setType] = useState<StayType>("hospedagem");
-  const [room, setRoom] = useState("");
-  const [names, setNames] = useState("");
-  const [medium, setMedium] = useState<CredentialMedium>("celular");
   const [payStayId, setPayStayId] = useState("");
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<PaymentMethod>("Pix");
-  const [issuedCreds, setIssuedCreds] = useState<typeof state.credentials>([]);
-
   const openStays = state.stays.filter((s) => s.status !== "encerrada");
-
-  const open = () => {
-    const list = names.split(",").map((n) => n.trim()).filter(Boolean);
-    let stayId = "";
-    const err = commit((s) => {
-      const { state: next, stay } = openStay(
-        s,
-        { type, room: type === "hospedagem" ? room : undefined, names: list, medium },
-        actor,
-      );
-      stayId = stay.id;
-      return next;
-    });
-    if (err) return toast.error(err);
-    toast.success("Permanência aberta e credenciais emitidas.");
-    setNames("");
-    setRoom("");
-    setIssuedCreds(getState().credentials.filter((c) => c.stayId === stayId && c.status === "ativa"));
-  };
 
   const pay = () => {
     const cents = Math.round(parseFloat(payAmount.replace(",", ".")) * 100);
@@ -88,57 +60,21 @@ function RecepcaoPage() {
   return (
     <StaffLayout subtitle="Recepção / caixa">
       <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] lg:items-start">
-          <Panel title="Abrir permanência (RF03–RF06)" className="h-fit">
-            <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                <div className="space-y-1.5">
-                  <Label>Tipo</Label>
-                  <Select value={type} onValueChange={(v) => setType(v as StayType)}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="hospedagem">Hospedagem</SelectItem>
-                      <SelectItem value="dayuse">Day use</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Meio da credencial</Label>
-                  <Select value={medium} onValueChange={(v) => setMedium(v as CredentialMedium)}>
-                    <SelectTrigger className="h-10">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="celular">Celular (web)</SelectItem>
-                      <SelectItem value="pulseira">Pulseira</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              {type === "hospedagem" && (
-                <div className="space-y-1.5">
-                  <Label>Quarto</Label>
-                  <Input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="Ex.: 305" className="h-10" />
-                </div>
-              )}
-              <div className="space-y-1.5">
-                <Label>Participantes (vírgula)</Label>
-                <Input
-                  value={names}
-                  onChange={(e) => setNames(e.target.value)}
-                  placeholder="Responsável, acompanhante…"
-                  className="h-10"
-                />
-              </div>
-              <Button type="button" className="h-10 w-full" onClick={open}>
-                Abrir e emitir credenciais
-              </Button>
-            </div>
-          </Panel>
+        <Panel title="Novo cliente" className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Cadastre hóspedes, escolha <strong>day use</strong> ou <strong>hospedagem</strong> e selecione quarto livre.
+            </p>
+            <Button type="button" className="h-10 shrink-0 gap-2" asChild>
+              <Link to="/recepcao/cadastro">
+                <UserPlus className="size-4" />
+                Ir para check-in
+              </Link>
+            </Button>
+          </div>
+        </Panel>
 
-          <Panel title={`Contas abertas (${openStays.length})`} className="min-h-0">
+        <Panel title={`Contas abertas (${openStays.length})`} className="min-h-0">
             {openStays.length === 0 ? (
               <EmptyState icon={<BedDouble className="size-5" />} title="Nenhuma conta aberta" hint="Abra uma permanência ao lado." />
             ) : (
@@ -206,34 +142,6 @@ function RecepcaoPage() {
               </ul>
             )}
           </Panel>
-        </div>
-
-        {issuedCreds.length > 0 && (
-          <Panel title="Credenciais recém-emitidas">
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {issuedCreds.map((c) => {
-                const p = state.stays.find((st) => st.id === c.stayId)?.participants.find((x) => x.id === c.participantId);
-                return (
-                  <li key={c.id} className="rounded-xl border bg-secondary/25 p-3">
-                    <p className="text-sm font-semibold">{p?.name}</p>
-                    <p className="font-mono text-xs">{c.code}</p>
-                    {c.activationCode && (
-                      <p className="mt-1 text-xs">
-                        Ativação: <span className="font-mono font-semibold">{c.activationCode}</span>
-                      </p>
-                    )}
-                    <Link to="/acesso" search={{ codigo: c.code }} className="text-xs text-primary hover:underline" target="_blank" rel="noreferrer">
-                      Abrir link do hóspede
-                    </Link>
-                    <div className="mt-2 scale-90 origin-top">
-                      <CredentialCodes code={c.code} compact />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </Panel>
-        )}
 
         <Panel title="Registrar pagamento (RF24)">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end">

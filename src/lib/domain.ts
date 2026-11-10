@@ -30,7 +30,15 @@ export type AccountStatus = "aberta" | "em_fechamento" | "encerrada";
 export interface Participant {
   id: string;
   name: string;
+  document?: string;
+  phone?: string;
 }
+
+export type GuestInput = {
+  name: string;
+  document?: string;
+  phone?: string;
+};
 
 export interface Stay {
   id: string;
@@ -368,18 +376,29 @@ export function loginCredential(s: State, code: string, pin: string) {
 
 export function openStay(
   s: State,
-  input: { type: StayType; room?: string; names: string[]; medium: CredentialMedium },
+  input: { type: StayType; room?: string; guests: GuestInput[]; medium: CredentialMedium },
   actor: string,
   now = Date.now(),
 ) {
-  const names = input.names.map((n) => n.trim()).filter(Boolean);
-  if (names.length === 0) throw new DomainError("Informe ao menos o responsável.");
+  const guests = input.guests
+    .map((g) => ({
+      name: g.name.trim(),
+      document: g.document?.trim() || undefined,
+      phone: g.phone?.trim() || undefined,
+    }))
+    .filter((g) => g.name.length >= 2);
+  if (guests.length === 0) throw new DomainError("Informe ao menos o responsável.");
   if (input.type === "hospedagem") {
     if (!input.room?.trim()) throw new DomainError("Hospedagem exige quarto.");
     if (s.stays.some((st) => st.room === input.room && st.status !== "encerrada"))
       throw new DomainError(`Quarto ${input.room} já possui permanência aberta.`);
   }
-  const participants = names.map((name) => ({ id: uid("par"), name }));
+  const participants: Participant[] = guests.map((g) => ({
+    id: uid("par"),
+    name: g.name,
+    ...(g.document ? { document: g.document } : {}),
+    ...(g.phone ? { phone: g.phone } : {}),
+  }));
   const stay: Stay = {
     id: uid("sty"),
     type: input.type,
@@ -415,7 +434,7 @@ export function openStay(
 export function registerFictionalGuest(s: State, name: string, actor = "Cadastro fictício", now = Date.now()) {
   const trimmed = name.trim();
   if (trimmed.length < 2) throw new DomainError("Informe seu nome completo.");
-  return openStay(s, { type: "dayuse", names: [trimmed], medium: "celular" }, actor, now);
+  return openStay(s, { type: "dayuse", guests: [{ name: trimmed }], medium: "celular" }, actor, now);
 }
 
 export function registerPayment(

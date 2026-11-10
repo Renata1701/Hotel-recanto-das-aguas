@@ -45,6 +45,7 @@ const routeRoles: Record<string, StaffRole[]> = {
   "/inicio": ["atendente", "recepcao", "admin"],
   "/atendente": ["atendente", "admin"],
   "/recepcao": ["recepcao", "admin"],
+  "/recepcao/cadastro": ["recepcao", "admin"],
 };
 
 const authListeners = new Set<() => void>();
@@ -156,6 +157,7 @@ export function staffNavForRole(role: StaffRole | undefined) {
     { to: "/cliente/entrar" as const, label: "Cliente", roles: ["atendente", "recepcao", "admin"] as StaffRole[] },
     { to: "/terminal" as const, label: "Terminal", roles: ["atendente", "recepcao", "admin"] as StaffRole[] },
     { to: "/recepcao" as const, label: "Recepção", roles: ["recepcao", "admin"] as StaffRole[] },
+    { to: "/recepcao/cadastro" as const, label: "Check-in", roles: ["recepcao", "admin"] as StaffRole[] },
   ];
   if (!role) return [];
   return all.filter((n) => n.roles.includes(role));

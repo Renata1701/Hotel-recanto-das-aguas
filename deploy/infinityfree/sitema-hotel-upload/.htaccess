@@ -1,0 +1,5 @@
+# InfinityFree (Apache) — redireciona para o app publicado no Lovable.
+# Troque a URL abaixo se usar Cloudflare Workers (ver deploy/infinityfree/LEIA-ME.md).
+
+RewriteEngine On
+RewriteRule ^(.*)$ https://senior-frontend-studio.lovable.app/$1 [R=302,L]
