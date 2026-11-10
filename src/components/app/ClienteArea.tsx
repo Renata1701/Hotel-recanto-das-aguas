@@ -174,10 +174,22 @@ export function ClientGuestShell({ title, children }: { title: string; children:
   );
 }
 
-export function GuestEnterForm({ initialCode = "" }: { initialCode?: string }) {
+export function GuestEnterForm({
+  initialCode = "",
+  /** Credencial veio do QR — bloqueia edição e destaca campo de token/PIN. */
+  lockCredential = false,
+}: {
+  initialCode?: string;
+  lockCredential?: boolean;
+}) {
+  const navigate = useNavigate();
   const [code, setCode] = useState(initialCode);
   const [pin, setPin] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialCode) setCode(initialCode.toUpperCase());
+  }, [initialCode]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -207,6 +219,7 @@ export function GuestEnterForm({ initialCode = "" }: { initialCode?: string }) {
         guestSessionFromCredential(logged, participant.name, stay.room ? `Quarto ${stay.room}` : "Day use"),
       );
       toast.success(`Olá, ${participant.name}`);
+      if (lockCredential) void navigate({ to: "/cliente" });
     } catch {
       if (cred) {
         recordPinFailure(cred.id);
@@ -218,26 +231,35 @@ export function GuestEnterForm({ initialCode = "" }: { initialCode?: string }) {
   };
 
   return (
-    <ClientGuestShell title="Entrar com credencial e PIN">
-      <Panel title="Já ativei meu acesso">
+    <ClientGuestShell title={lockCredential ? "Token de acesso" : "Entrar com credencial e PIN"}>
+      <Panel title={lockCredential ? "Acesso pelo QR" : "Já ativei meu acesso"}>
         <p className="mb-4 text-sm text-muted-foreground">
-          Informe o código da sua credencial (QR ou pulseira) e o PIN que você definiu. Isso não é o login da equipe.
+          {lockCredential
+            ? "Credencial reconhecida pelo QR. Digite o token (PIN) que você definiu na ativação."
+            : "Informe o código da sua credencial (QR ou pulseira) e o PIN que você definiu. Isso não é o login da equipe."}
         </p>
         <form onSubmit={submit} className="space-y-3">
+          {lockCredential ? (
+            <div className="rounded-xl border border-border/80 bg-secondary/25 px-3 py-2.5 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credencial</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{code || "—"}</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="code">Credencial</Label>
+              <Input
+                id="code"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="RDA-R4F4-208A"
+                className="h-12 font-mono uppercase"
+                autoComplete="off"
+                required
+              />
+            </div>
+          )}
           <div className="space-y-1.5">
-            <Label htmlFor="code">Credencial</Label>
-            <Input
-              id="code"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="RDA-R4F4-208A"
-              className="h-12 font-mono uppercase"
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="pin">PIN pessoal</Label>
+            <Label htmlFor="pin">{lockCredential ? "Token (PIN pessoal)" : "PIN pessoal"}</Label>
             <Input
               id="pin"
               type="password"
@@ -245,7 +267,9 @@ export function GuestEnterForm({ initialCode = "" }: { initialCode?: string }) {
               autoComplete="current-password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
-              className="h-12"
+              className="h-12 text-center text-lg tracking-widest"
+              placeholder="••••"
+              autoFocus={lockCredential}
               required
             />
           </div>
@@ -399,9 +423,12 @@ export function GuestActivationSuccess({ code }: { code: string }) {
 
 export function GuestActivateForm({
   initialCode = "",
+  fromQr = false,
   onSuccess,
 }: {
   initialCode?: string;
+  /** Aberto via leitura de QR (`/acesso`). */
+  fromQr?: boolean;
   onSuccess?: () => void;
 }) {
   const [code, setCode] = useState(initialCode);
@@ -429,32 +456,42 @@ export function GuestActivateForm({
   };
 
   return (
-    <ClientGuestShell title="Primeiro acesso (RF07)">
-      <Panel title="Ativar com código da recepção">
+    <ClientGuestShell title={fromQr ? "Token da recepção" : "Primeiro acesso (RF07)"}>
+      <Panel title={fromQr ? "Acesso pelo QR" : "Ativar com código da recepção"}>
         <p className="mb-4 text-sm text-muted-foreground">
-          A recepção entrega a credencial e um <b>código de uso único</b>. Você cria seu PIN aqui; depois entra só com credencial + PIN.
+          {fromQr
+            ? "Informe o token de uso único que a recepção entregou e crie seu PIN para os próximos acessos."
+            : "A recepção entrega a credencial e um código de uso único. Você cria seu PIN aqui; depois entra só com credencial + PIN."}
         </p>
         <form onSubmit={submit} className="space-y-3">
+          {fromQr && initialCode ? (
+            <div className="rounded-xl border border-border/80 bg-secondary/25 px-3 py-2.5 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credencial</p>
+              <p className="font-mono text-sm font-semibold text-foreground">{code}</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="code-a">Credencial</Label>
+              <Input
+                id="code-a"
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                placeholder="RDA-CL4R-208C"
+                className="h-12 font-mono uppercase"
+                required
+              />
+            </div>
+          )}
           <div className="space-y-1.5">
-            <Label htmlFor="code-a">Credencial</Label>
-            <Input
-              id="code-a"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="RDA-CL4R-208C"
-              className="h-12 font-mono uppercase"
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="act">Código de ativação</Label>
+            <Label htmlFor="act">{fromQr ? "Token de ativação" : "Código de ativação"}</Label>
             <Input
               id="act"
               value={activation}
               onChange={(e) => setActivation(e.target.value)}
               placeholder="482913"
-              className="h-12 font-mono"
+              className="h-12 font-mono text-center text-lg tracking-widest"
               inputMode="numeric"
+              autoFocus={fromQr}
               required
             />
           </div>
@@ -584,7 +621,7 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
       <header className="shrink-0 border-b border-border/80 bg-card/95 backdrop-blur">
         <div className="flex w-full items-center justify-between gap-4 px-4 py-3 sm:px-8 lg:px-10">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-primary-foreground shadow-sm">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gradient text-accent-foreground shadow-sm">
               <Waves className="size-5" aria-hidden />
             </span>
             <div className="min-w-0">

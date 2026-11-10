@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { EmptyState, Panel, StatusPill } from "@/components/app/shared";
 import { ProposalReview } from "@/components/app/ProposalReview";
 import { CredentialReader } from "@/components/app/CredentialReader";
+import { CredentialQrPanel } from "@/components/app/CredentialQrPanel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,10 @@ const demoCodes = [
 function TerminalPage() {
   const state = useStore((s) => s);
   const [credCode, setCredCode] = useState<string | null>(null);
+  const [qrCode, setQrCode] = useState(demoCodes[0]!.code);
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
+  const qrDisplayCode = credCode ?? qrCode;
 
   const identified = useMemo(() => {
     if (!credCode) return null;
@@ -85,11 +88,13 @@ function TerminalPage() {
   };
 
   const read = (code: string) => {
+    const normalized = code.trim().toUpperCase();
     try {
-      resolveCredential(getState(), code);
-      setCredCode(code.trim().toUpperCase());
+      resolveCredential(getState(), normalized);
+      setCredCode(normalized);
+      setQrCode(normalized);
       setPin("");
-      toast.message("Credencial lida. Informe o PIN do hóspede.");
+      toast.message("Credencial lida. QR atualizado; informe o PIN se houver proposta.");
     } catch (e) {
       toast.error((e as Error).message);
     }
@@ -125,8 +130,18 @@ function TerminalPage() {
           )}
         </Panel>
 
+        <CredentialQrPanel
+          code={qrDisplayCode}
+          compact
+          demoCodes={demoCodes}
+          onSelectDemo={(code) => {
+            setQrCode(code.trim().toUpperCase());
+            toast.message("QR gerado. Aponte o celular para o código.");
+          }}
+        />
+
         {identified && "cred" in identified && (
-          <Panel title="2 · Conferir e confirmar com PIN (RF20)">
+          <Panel title="3 · Conferir e confirmar com PIN (RF20)">
             {!pending ? (
               <EmptyState icon={<Monitor className="size-5" />} title="Sem proposta aguardando" hint="Peça ao atendente para enviar o pedido." />
             ) : (

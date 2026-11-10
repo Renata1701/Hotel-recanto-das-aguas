@@ -139,7 +139,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
                 : "border-border/80 bg-card hover:border-primary/30",
             )}
           >
-            <span className="grid size-9 place-items-center rounded-lg bg-brand-gradient text-primary-foreground">
+            <span className="grid size-9 place-items-center rounded-lg bg-brand-gradient text-accent-foreground">
               <BedDouble className="size-4" />
             </span>
             <span className="text-sm font-semibold">Hospedagem</span>
@@ -158,7 +158,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
                 : "border-border/80 bg-card hover:border-primary/30",
             )}
           >
-            <span className="grid size-9 place-items-center rounded-lg bg-brand-gradient text-primary-foreground">
+            <span className="grid size-9 place-items-center rounded-lg bg-brand-gradient text-accent-foreground">
               <Sun className="size-4" />
             </span>
             <span className="text-sm font-semibold">Day use</span>

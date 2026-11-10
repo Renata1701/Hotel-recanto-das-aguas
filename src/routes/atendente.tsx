@@ -179,7 +179,7 @@ function Attendant() {
                   className={cn(
                     "flex min-w-[6.5rem] shrink-0 items-center gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-all sm:text-sm lg:min-w-0 lg:w-full",
                     active
-                      ? "bg-brand-gradient text-primary-foreground shadow-md"
+                      ? "bg-brand-gradient text-accent-foreground shadow-md"
                       : "text-muted-foreground hover:bg-primary/5 hover:text-foreground",
                   )}
                 >
@@ -211,7 +211,7 @@ function Attendant() {
                 className={cn(
                   "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-all sm:text-sm",
                   cat === c
-                    ? "border-transparent bg-brand-gradient text-primary-foreground shadow-sm"
+                    ? "border-transparent bg-brand-gradient text-accent-foreground shadow-sm"
                     : "border-border bg-card text-muted-foreground hover:border-primary/30 hover:text-foreground",
                 )}
               >
@@ -245,7 +245,7 @@ function Attendant() {
                       <div className="mt-1.5 flex items-center justify-between gap-1">
                         <span className="tabular text-sm font-bold text-primary sm:text-base">{brl(p.price)}</span>
                         {p.available ? (
-                          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-primary transition-all group-hover:bg-brand-gradient group-hover:text-primary-foreground">
+                          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-primary transition-all group-hover:bg-brand-gradient group-hover:text-accent-foreground">
                             <Plus className="size-3.5" />
                           </span>
                         ) : (

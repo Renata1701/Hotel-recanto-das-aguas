@@ -173,7 +173,7 @@ export function StaffLayout({
               className={navLinkClass}
               activeProps={{
                 className: cn(
-                  "bg-staff-nav-active border-l-2 border-stone-300/90 font-semibold text-stone-50 shadow-sm ring-1 ring-stone-600/20",
+                  "bg-staff-nav-active border-l-2 border-accent font-semibold text-stone-50 shadow-sm ring-1 ring-accent/25",
                   sidebarMini && "justify-center border-l-0",
                 ),
               }}

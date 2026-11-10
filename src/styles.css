@@ -56,67 +56,67 @@
   --shadow-lift: var(--shadow-lift-v);
 }
 
-/* Paleta resort — azul #1E40AF, branco e cinza. */
+/* Paleta resort — carvão, creme e dourado (referência editorial / luxo). */
 :root {
   --radius: 0.75rem;
-  --background: #f3f4f6;
-  --foreground: #111827;
+  --background: #f4f2ee;
+  --foreground: #1c1917;
   --card: #ffffff;
-  --card-foreground: #111827;
+  --card-foreground: #1c1917;
   --popover: #ffffff;
-  --popover-foreground: #111827;
-  --primary: #1e40af;
-  --primary-foreground: #ffffff;
-  --secondary: #e5e7eb;
-  --secondary-foreground: #374151;
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --accent: #2563eb;
-  --accent-foreground: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #3f3a36;
+  --primary-foreground: #faf8f5;
+  --secondary: #e7e5e4;
+  --secondary-foreground: #44403c;
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+  --accent: #b8956a;
+  --accent-foreground: #1c1917;
   --destructive: hsl(0 72% 51%);
   --destructive-foreground: hsl(0 0% 100%);
   --success: hsl(152 56% 32%);
   --success-foreground: hsl(0 0% 100%);
   --warning: hsl(42 85% 48%);
-  --warning-foreground: hsl(220 9% 18%);
-  --highlight: #dbeafe;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
-  --ring: #1e40af;
-  --chart-1: #1e40af;
-  --chart-2: #3b82f6;
-  --chart-3: #111827;
+  --warning-foreground: hsl(28 20% 16%);
+  --highlight: #f0ebe3;
+  --border: #d6d3d1;
+  --input: #d6d3d1;
+  --ring: #b8956a;
+  --chart-1: #3f3a36;
+  --chart-2: #b8956a;
+  --chart-3: #1c1917;
   --chart-4: hsl(42 85% 48%);
-  --chart-5: #6b7280;
-  --sidebar: #0f172a;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #1e40af;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
-  --gradient-brand: linear-gradient(145deg, #0f172a 0%, #1e3a8a 38%, #2563eb 72%, #60a5fa 100%);
-  --gradient-brand-horizontal: linear-gradient(90deg, #0f172a 0%, #1e40af 45%, #3b82f6 100%);
-  --gradient-surface: linear-gradient(180deg, #dbeafe 0%, #eff6ff 28%, #f3f4f6 55%, #f8fafc 100%);
+  --chart-5: #78716c;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #f5f5f4;
+  --sidebar-primary: #b8956a;
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-accent: #292524;
+  --sidebar-accent-foreground: #f5f5f4;
+  --sidebar-border: #44403c;
+  --sidebar-ring: #c4a574;
+  --gradient-brand: linear-gradient(148deg, #7a6346 0%, #b8956a 46%, #c9ad7a 100%);
+  --gradient-brand-horizontal: linear-gradient(90deg, #1c1917 0%, #57534e 55%, #b8956a 100%);
+  --gradient-surface: linear-gradient(180deg, #f4f2ee 0%, #faf9f7 35%, #f5f5f4 70%, #f4f2ee 100%);
   --gradient-hero-overlay: linear-gradient(
     165deg,
-    rgb(15 23 42 / 0.35) 0%,
-    rgb(30 58 138 / 0.75) 45%,
-    rgb(37 99 235 / 0.55) 100%
+    rgb(12 10 9 / 0.25) 0%,
+    rgb(28 25 23 / 0.55) 50%,
+    rgb(12 10 9 / 0.72) 100%
   );
-  --gradient-nav-active: linear-gradient(90deg, #1e3a8a 0%, #2563eb 55%, #60a5fa 100%);
+  --gradient-nav-active: linear-gradient(90deg, #44403c 0%, #57534e 45%, rgb(184 149 106 / 0.85) 100%);
   --gradient-staff-sidebar: linear-gradient(185deg, #292524 0%, #1c1917 52%, #0c0a09 100%);
   --gradient-staff-nav-active: linear-gradient(
     90deg,
-    rgb(214 211 209 / 0.18) 0%,
-    rgb(168 162 158 / 0.08) 100%
+    rgb(184 149 106 / 0.24) 0%,
+    rgb(184 149 106 / 0.06) 100%
   );
   --staff-sidebar-accent: #e7e5e4;
   --staff-sidebar-muted: rgb(231 229 228 / 0.72);
   --staff-sidebar-border: rgb(255 255 255 / 0.08);
-  --shadow-soft-v: 0 1px 2px rgb(17 24 39 / 0.05), 0 1px 3px rgb(17 24 39 / 0.04);
-  --shadow-lift-v: 0 12px 32px -8px rgb(30 64 175 / 0.14), 0 4px 12px rgb(17 24 39 / 0.06);
+  --shadow-soft-v: 0 1px 2px rgb(28 25 23 / 0.06), 0 1px 3px rgb(28 25 23 / 0.04);
+  --shadow-lift-v: 0 12px 32px -8px rgb(28 25 23 / 0.18), 0 4px 12px rgb(28 25 23 / 0.08);
 }
 
 @layer base {
@@ -162,7 +162,7 @@
   background-image: var(--gradient-hero-overlay);
 }
 @utility text-gradient-brand {
-  background-image: var(--gradient-brand-horizontal);
+  background-image: linear-gradient(90deg, #57534e 0%, #b8956a 55%, #c4a574 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -183,18 +183,18 @@
   animation: pulse-ring 1.6s ease-out infinite;
 }
 
-/* Login split-screen — azul corporativo #1E40AF (escopo local). */
+/* Login split-screen — creme e carvão (escopo local). */
 .login-resort {
-  --login-primary: #1e40af;
-  --login-primary-hover: #1e3a8a;
-  --login-focus: #dbeafe;
-  --login-surface: #f3f4f6;
+  --login-primary: #57534e;
+  --login-primary-hover: #44403c;
+  --login-focus: #f0ebe3;
+  --login-surface: #f4f2ee;
   --login-card: #ffffff;
-  --login-ink: #111827;
-  --login-muted: #6b7280;
-  --login-border: #e5e7eb;
-  --login-input-bg: #f3f4f6;
-  --login-shadow: 0 4px 24px rgb(30 64 175 / 0.08), 0 2px 8px rgb(17 24 39 / 0.04);
+  --login-ink: #1c1917;
+  --login-muted: #78716c;
+  --login-border: #d6d3d1;
+  --login-input-bg: #f5f5f4;
+  --login-shadow: 0 4px 24px rgb(28 25 23 / 0.08), 0 2px 8px rgb(28 25 23 / 0.04);
   font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   color: var(--login-ink);
   background: var(--login-surface);
@@ -203,9 +203,9 @@
 .login-resort-hero-overlay {
   background: linear-gradient(
     145deg,
-    rgb(15 23 42 / 0.88) 0%,
-    rgb(30 58 138 / 0.78) 40%,
-    rgb(37 99 235 / 0.62) 100%
+    rgb(12 10 9 / 0.88) 0%,
+    rgb(41 37 36 / 0.82) 45%,
+    rgb(68 64 60 / 0.68) 100%
   );
 }
 
@@ -229,7 +229,7 @@
 }
 
 .login-resort-input::placeholder {
-  color: hsl(215 12% 62%);
+  color: hsl(25 6% 52%);
 }
 
 .login-resort-input:focus-visible {
@@ -244,9 +244,9 @@
   border-radius: 0.75rem;
   font-weight: 600;
   font-size: 0.9375rem;
-  color: #ffffff;
-  background-image: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #60a5fa 100%);
-  box-shadow: 0 4px 14px rgb(30 64 175 / 0.28);
+  color: #faf8f5;
+  background-image: linear-gradient(135deg, #292524 0%, #44403c 45%, #57534e 100%);
+  box-shadow: 0 4px 14px rgb(28 25 23 / 0.22);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -254,8 +254,8 @@
 }
 
 .login-resort-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-  box-shadow: 0 6px 18px rgb(30 64 175 / 0.38);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 18px rgb(28 25 23 / 0.28);
   transform: translateY(-1px);
 }
 
@@ -357,5 +357,5 @@
 }
 
 .staff-home-card:hover .staff-home-card-cta {
-  color: var(--primary);
+  color: var(--accent);
 }

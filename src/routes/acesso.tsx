@@ -1,153 +1,101 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-
 import { useSyncExternalStore } from "react";
-
-import { GuestActivationSuccess, GuestActivateForm, ClientGuestShell } from "@/components/app/ClienteArea";
-
+import { GuestActivationSuccess, GuestActivateForm, GuestEnterForm, ClientGuestShell } from "@/components/app/ClienteArea";
 import { Panel } from "@/components/app/shared";
-
 import { Button } from "@/components/ui/button";
-
 import { normalizeCredentialCode } from "@/lib/guest-access-url";
-
 import { useStore } from "@/lib/store";
-
-
 
 type Search = { codigo?: string; sucesso?: string | boolean };
 
-
-
-/** QR ou link de acesso — permanece nesta rota (evita tela branca). */
-
+/** QR ou link de acesso — tela mobile para token (ativação ou PIN). */
 export const Route = createFileRoute("/acesso")({
-
   validateSearch: (search: Record<string, unknown>): Search => ({
-
     codigo: typeof search.codigo === "string" ? normalizeCredentialCode(search.codigo) : undefined,
-
     sucesso: search.sucesso === "1" || search.sucesso === 1 || search.sucesso === true,
-
   }),
-
   head: () => ({
-
     meta: [{ title: "Acesso · Recanto das Águas" }],
-
   }),
-
   component: AcessoPage,
-
 });
 
-
-
 function AcessoPage() {
-
   const navigate = useNavigate();
-
   const { codigo, sucesso } = Route.useSearch();
-
   const hydrated = useSyncExternalStore(
-
     () => () => {},
-
     () => true,
-
     () => false,
-
   );
-
   const cred = useStore((s) => (codigo ? s.credentials.find((c) => c.code === codigo) : undefined));
 
-
-
   if (!hydrated) {
-
     return (
-
       <ClientGuestShell title="Acesso pelo QR">
-
         <Panel>
-
           <p className="py-10 text-center text-sm text-muted-foreground">Carregando…</p>
-
         </Panel>
-
       </ClientGuestShell>
-
     );
-
   }
-
-
 
   if (!codigo) {
-
     return (
-
       <ClientGuestShell title="Acesso pelo QR">
-
         <Panel title="Credencial não informada">
-
-          <p className="text-sm text-muted-foreground">Escaneie o QR da recepção ou use o link completo com o código.</p>
-
+          <p className="text-sm text-muted-foreground">Escaneie o QR exibido no terminal ou na recepção.</p>
           <Button asChild className="mt-4 h-11 w-full">
-
             <Link to="/cliente/entrar">Entrar manualmente</Link>
-
           </Button>
-
         </Panel>
-
       </ClientGuestShell>
-
     );
-
   }
 
-
-
-  const alreadyActive = Boolean(cred?.pin && cred.status === "ativa");
-
-  if (sucesso || alreadyActive) {
-
+  if (sucesso) {
     return <GuestActivationSuccess code={codigo} />;
-
   }
 
-
-
-  const needsActivate = Boolean(cred?.activationCode && !cred.pin);
-
-  const showActivate = needsActivate || !cred;
-
-
-
-  if (showActivate) {
-
+  if (!cred) {
     return (
-
-      <GuestActivateForm
-
-        initialCode={codigo}
-
-        onSuccess={() => {
-
-          void navigate({ to: "/acesso", search: { codigo, sucesso: "1" }, replace: true });
-
-        }}
-
-      />
-
+      <ClientGuestShell title="Acesso pelo QR">
+        <Panel title="Credencial não encontrada">
+          <p className="font-mono text-sm text-foreground">{codigo}</p>
+          <p className="mt-2 text-sm text-muted-foreground">Confira o QR ou peça uma nova credencial na recepção.</p>
+          <Button asChild className="mt-4 h-11 w-full">
+            <Link to="/cliente/entrar" search={{ codigo }}>
+              Digitar manualmente
+            </Link>
+          </Button>
+        </Panel>
+      </ClientGuestShell>
     );
-
   }
 
+  if (cred.pin && cred.status === "ativa") {
+    return <GuestEnterForm initialCode={codigo} lockCredential />;
+  }
 
+  if (cred.activationCode && !cred.pin) {
+    return (
+      <GuestActivateForm
+        initialCode={codigo}
+        fromQr
+        onSuccess={() => {
+          void navigate({ to: "/acesso", search: { codigo, sucesso: "1" }, replace: true });
+        }}
+      />
+    );
+  }
 
-  return <GuestActivationSuccess code={codigo} />;
-
+  return (
+    <GuestActivateForm
+      initialCode={codigo}
+      fromQr
+      onSuccess={() => {
+        void navigate({ to: "/acesso", search: { codigo, sucesso: "1" }, replace: true });
+      }}
+    />
+  );
 }
-
-
