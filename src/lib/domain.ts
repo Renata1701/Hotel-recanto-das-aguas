@@ -16,6 +16,12 @@ export interface Product {
   description: string;
   price: number; // cents
   available: boolean;
+  /** Cardápio do setor físico (bar, restaurante ou lanchonete). */
+  sector: Sector;
+}
+
+export function productsInSector(products: Product[], sector: Sector) {
+  return products.filter((p) => p.sector === sector);
 }
 
 export type StayType = "hospedagem" | "dayuse";
@@ -204,6 +210,8 @@ export function createProposal(
     const product = s.products.find((p) => p.id === i.productId);
     if (!product) throw new DomainError("Produto inexistente.");
     if (!product.available) throw new DomainError(`${product.name} está indisponível.`);
+    if (product.sector !== input.sector)
+      throw new DomainError(`${product.name} não pertence ao setor ${input.sector}.`);
     if (!Number.isInteger(i.qty) || i.qty <= 0) throw new DomainError("Quantidade inválida.");
     return { productId: product.id, name: product.name, unitPrice: product.price, qty: i.qty, note: i.note };
   });

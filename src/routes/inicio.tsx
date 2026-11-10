@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, ConciergeBell, MonitorSmartphone, ScanLine, Smartphone, Waves } from "lucide-react";
 import hero from "@/assets/hero-pool.jpg";
-import { AppHeader } from "@/components/app/shared";
+import { StaffLayout } from "@/components/app/shared";
 import { getStaffSession } from "@/lib/auth";
 import { redirect } from "@tanstack/react-router";
 
@@ -26,8 +26,7 @@ const areas = [
 
 function InicioPage() {
   return (
-    <div className="min-h-screen">
-      <AppHeader />
+    <StaffLayout>
       <section className="relative isolate overflow-hidden">
         <img
           src={hero}
@@ -42,7 +41,7 @@ function InicioPage() {
             <Waves className="size-3.5" aria-hidden />
             Hospedagem &amp; Day use
           </p>
-          <h1 className="max-w-3xl text-4xl font-semibold leading-tight text-primary-foreground sm:text-6xl">
+          <h1 className="max-w-3xl text-4xl font-bold leading-tight tracking-tight text-primary-foreground sm:text-6xl">
             Painel da equipe
           </h1>
           <p className="mt-4 max-w-xl text-lg text-primary-foreground/90">
@@ -77,8 +76,8 @@ function InicioPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
-        <div className="rounded-2xl border border-dashed border-primary/20 bg-card p-6 text-sm shadow-soft">
-          <p className="font-semibold text-primary">Demonstração UC01</p>
+        <div className="rounded-2xl border border-primary/15 bg-gradient-to-br from-card via-card to-primary/10 p-6 text-sm shadow-soft">
+          <p className="font-semibold text-gradient-brand">Demonstração UC01</p>
           <p className="mt-1 text-muted-foreground">
             Hóspede em <Link to="/cliente/entrar" className="font-medium text-primary hover:underline">/cliente/entrar</Link> (
             <code className="font-mono">RDA-R4F4-208A</code> + PIN <code className="font-mono">1234</code>). Pulseira:{" "}
@@ -87,6 +86,6 @@ function InicioPage() {
           </p>
         </div>
       </section>
-    </div>
+    </StaffLayout>
   );
 }

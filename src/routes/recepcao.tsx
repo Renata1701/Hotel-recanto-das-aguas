@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { BedDouble, Wallet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppHeader, CredentialCodes, EmptyState, Panel } from "@/components/app/shared";
+import { StaffLayout, CredentialCodes, EmptyState, Panel } from "@/components/app/shared";
 import { requireStaffAuth, useStaffSession } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,8 +86,7 @@ function RecepcaoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader subtitle="Recepção / caixa" />
+    <StaffLayout subtitle="Recepção / caixa">
       <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,22rem)_1fr] lg:items-start">
           <Panel title="Abrir permanência (RF03–RF06)" className="h-fit">
@@ -281,6 +280,6 @@ function RecepcaoPage() {
           </div>
         </Panel>
       </main>
-    </div>
+    </StaffLayout>
   );
 }

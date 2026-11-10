@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { CheckCircle2, LogOut, Smartphone, UserPlus, Waves } from "lucide-react";
+import { CheckCircle2, LogOut, Smartphone, UserPlus } from "lucide-react";
+import { BrandMark } from "@/components/app/BrandMark";
 import { useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { CredentialCodes, EmptyState, Panel, StatusPill, fmtTime } from "@/components/app/shared";

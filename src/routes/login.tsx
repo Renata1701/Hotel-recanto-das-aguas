@@ -1,11 +1,11 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, LogIn, Waves } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { BrandMark } from "@/components/app/BrandMark";
 import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
 import hero from "@/assets/hero-pool.jpg";
 import { authenticate, getStaffSession, resolvePostLoginPath, setStaffSession } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type LoginSearch = {
   redirect?: string;
@@ -23,8 +23,14 @@ export const Route = createFileRoute("/login")({
   }),
   head: () => ({
     meta: [
-      { title: "Entrar · Recanto das Águas" },
+      { title: "Área de Acesso · Recanto das Águas" },
       { name: "description", content: "Acesso da equipe ao sistema de comanda digital." },
+    ],
+    links: [
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
+      },
     ],
   }),
   component: LoginPage,
@@ -45,7 +51,7 @@ function LoginPage() {
     setLoading(true);
     const session = authenticate(login, password);
     if (!session) {
-      setError("Usuário ou senha inválidos.");
+      setError("Credenciais inválidas. Verifique e-mail/usuário e senha.");
       setLoading(false);
       return;
     }
@@ -54,95 +60,122 @@ function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="relative hidden min-h-screen w-[min(48vw,640px)] shrink-0 lg:block">
-        <img src={hero} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-hero-overlay" />
-        <div className="relative flex h-full flex-col justify-end p-10 text-primary-foreground">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary-foreground/80">Hotel Recanto das Águas</p>
-          <p className="mt-3 max-w-sm font-display text-3xl font-semibold leading-tight">Consumo digital com conferência do hóspede.</p>
+    <div className="login-resort flex min-h-screen flex-col lg:flex-row">
+      <aside className="relative hidden min-h-screen w-full overflow-hidden lg:flex lg:w-[58%]">
+        <img src={hero} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="login-resort-hero-overlay absolute inset-0" aria-hidden />
+        <div className="relative z-10 flex h-full flex-col justify-end p-12 xl:p-16">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/80">Recanto das Águas</p>
+          <h2 className="mt-4 max-w-lg text-4xl font-semibold leading-[1.15] tracking-tight text-white xl:text-[2.75rem]">
+            Bem-vindo ao Paraíso
+          </h2>
+          <p className="mt-4 max-w-md text-lg font-medium text-white/90">Acesse seu refúgio digital</p>
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col px-4 py-6 sm:px-8 sm:py-8 lg:justify-center lg:py-10">
-        <p className="sr-only">Login</p>
-        <div className="mx-auto w-full max-w-md">
-          <div className="rounded-2xl border bg-card shadow-soft">
-            <div className="flex items-center gap-2.5 border-b px-5 py-4 sm:px-6">
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand-gradient text-primary-foreground shadow-soft">
-                <Waves className="size-5" />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-display text-lg font-semibold leading-tight sm:text-xl">Recanto das Águas</span>
-                <span className="block text-xs text-muted-foreground sm:text-sm">RF01 — funcionários e perfis</span>
-              </span>
-            </div>
+      <div className="flex min-h-screen flex-1 items-center justify-center bg-[#ffffff] px-5 py-12 sm:px-10 lg:w-[42%] lg:bg-[var(--login-surface)]">
+        <div className="w-full max-w-[24.5rem]">
+          <div className="login-resort-card rounded-2xl p-8 sm:p-9">
+            <header className="text-center">
+              <BrandMark className="mx-auto" size={72} />
+              <p className="mt-5 text-lg font-semibold tracking-tight text-[var(--login-ink)]">Recanto das Águas</p>
+            </header>
 
-            <div className="px-5 py-4 sm:px-6 sm:py-5">
-              <h1 className="font-display text-xl font-semibold sm:text-2xl">Entrar</h1>
-              <p className="mt-0.5 text-sm text-muted-foreground">
-                Use suas credenciais para acessar atendimento, terminal ou recepção.
+            <div className="mt-8">
+              <h1 className="text-center text-xl font-semibold text-[var(--login-ink)]">Área de Acesso</h1>
+              <p className="mt-2 text-center text-sm text-[var(--login-muted)]">
+                Entre com e-mail ou usuário da equipe e sua senha.
               </p>
 
-            <form onSubmit={submit} className="mt-4 space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="login">Usuário</Label>
-                <Input
-                  id="login"
-                  name="login"
-                  autoComplete="username"
-                  value={login}
-                  onChange={(e) => setLogin(e.target.value)}
-                  placeholder="Seu usuário"
-                  className="h-11 bg-background"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••"
-                    className="h-11 bg-background pr-10"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
+              <form onSubmit={submit} className="mt-7 space-y-5" noValidate>
+                <div className="space-y-2">
+                  <label htmlFor="login" className="text-sm font-medium text-[var(--login-ink)]">
+                    E-mail
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      className="pointer-events-none absolute left-3 top-1/2 size-[1.125rem] -translate-y-1/2 text-[var(--login-muted)]"
+                      aria-hidden
+                    />
+                    <input
+                      id="login"
+                      name="login"
+                      type="text"
+                      autoComplete="username"
+                      value={login}
+                      onChange={(e) => setLogin(e.target.value)}
+                      placeholder="nome@recanto.com ou usuário"
+                      className="login-resort-input w-full pr-3"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="h-11 w-full gap-2 text-base" disabled={loading}>
-                <LogIn className="size-4" />
-                {loading ? "Entrando…" : "Acessar"}
-              </Button>
-            </form>
-            </div>
 
-            <p className="border-t px-5 py-3 text-center text-sm text-muted-foreground sm:px-6">              Área do hóspede?{" "}
-              <Link to="/cliente/entrar" className="font-medium text-primary hover:underline">
-                Acessar como hóspede
-              </Link>
-              {" · "}
-              <Link to="/cliente/cadastro" className="font-medium text-primary hover:underline">
-                Cadastro fictício
-              </Link>
-              {" · "}
-              <Link to="/acesso" search={{ codigo: "RDA-R4F4-208A" }} className="font-medium text-primary hover:underline">
-                Link de acesso (QR)
-              </Link>
-            </p>
+                <div className="space-y-2">
+                  <label htmlFor="password" className="text-sm font-medium text-[var(--login-ink)]">
+                    Senha
+                  </label>
+                  <div className="relative">
+                    <Lock
+                      className="pointer-events-none absolute left-3 top-1/2 size-[1.125rem] -translate-y-1/2 text-[var(--login-muted)]"
+                      aria-hidden
+                    />
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="login-resort-input w-full pr-11"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-[var(--login-muted)] transition-colors hover:bg-[var(--login-focus)] hover:text-[var(--login-primary)]"
+                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                    {error}
+                  </p>
+                )}
+
+                <button type="submit" disabled={loading} className={cn("login-resort-btn w-full")}>
+                  {loading ? "Entrando…" : "Acessar"}
+                </button>
+              </form>
+
+              <footer className="mt-6 flex flex-col items-center gap-3 text-sm">
+                <button
+                  type="button"
+                  className="text-[var(--login-muted)] transition-colors hover:text-[var(--login-primary)]"
+                  onClick={() => toast.message("Solicite a redefinição de senha à recepção ou ao administrador.")}
+                >
+                  Esqueceu a senha?
+                </button>
+                <Link
+                  to="/acesso"
+                  search={{ codigo: "RDA-R4F4-208A" }}
+                  className="text-[var(--login-muted)] transition-colors hover:text-[var(--login-primary)]"
+                >
+                  Acessar via QR Code
+                </Link>
+                <Link
+                  to="/cliente/entrar"
+                  className="text-xs text-[var(--login-muted)]/80 transition-colors hover:text-[var(--login-primary)]"
+                >
+                  Área do hóspede
+                </Link>
+              </footer>
+            </div>
           </div>
         </div>
       </div>
