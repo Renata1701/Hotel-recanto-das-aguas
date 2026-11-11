@@ -5,6 +5,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { DomainError, expireStale, type State } from "./domain";
 import { seedState } from "./seed";
+import { migrateCatalog } from "./catalog-migration";
 
 const KEY = "rda-state-v1";
 let state: State | null = null;
@@ -12,10 +13,12 @@ const listeners = new Set<() => void>();
 
 function load(): State {
   if (state) return state;
-  if (typeof window === "undefined") return (state = seedState());
+  if (typeof window === "undefined") return serverSnapshot;
   try {
     const raw = localStorage.getItem(KEY);
-    state = raw ? (JSON.parse(raw) as State) : seedState();
+    const saved = raw ? (JSON.parse(raw) as State) : seedState();
+    state = migrateCatalog(saved);
+    if (state !== saved) persist();
   } catch {
     state = seedState();
   }
@@ -33,7 +36,9 @@ function emit() {
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
     if (e.key === KEY && e.newValue) {
-      state = JSON.parse(e.newValue);
+      const saved = JSON.parse(e.newValue) as State;
+      state = migrateCatalog(saved);
+      if (state !== saved) persist();
       emit();
     }
   });
