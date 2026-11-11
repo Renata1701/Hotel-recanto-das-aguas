@@ -36,8 +36,8 @@ export interface Participant {
 
 export type GuestInput = {
   name: string;
-  document?: string;
-  phone?: string;
+  document?: string | undefined;
+  phone?: string | undefined;
 };
 
 export interface Stay {
@@ -399,7 +399,7 @@ export function loginCredential(s: State, code: string, pin: string) {
 
 export function openStay(
   s: State,
-  input: { type: StayType; room?: string; guests: GuestInput[]; medium: CredentialMedium },
+  input: { type: StayType; room?: string | undefined; guests: GuestInput[]; medium: CredentialMedium },
   actor: string,
   now = Date.now(),
 ) {

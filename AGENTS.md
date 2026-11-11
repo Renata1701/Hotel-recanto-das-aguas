@@ -28,3 +28,5 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Normalize legacy demo catalogs at store restoration and cross-tab synchronization, preserving transaction data; older saved products lack the sector field required by menu filtering.

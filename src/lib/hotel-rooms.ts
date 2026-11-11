@@ -25,7 +25,7 @@ export const HOTEL_ROOMS: HotelRoom[] = [
 
 export type RoomAvailability = HotelRoom & {
   status: "livre" | "ocupado";
-  stayId?: string;
+  stayId?: string | undefined;
 };
 
 export function listRoomAvailability(state: State): RoomAvailability[] {

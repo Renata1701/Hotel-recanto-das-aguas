@@ -87,7 +87,7 @@ function Attendant() {
   const sectorProducts = useMemo(() => productsInSector(products, sector), [products, sector]);
 
   const categoryOptions = useMemo((): ("Todos" | Category)[] => {
-    const inMenu = new Set(sectorProducts.map((p) => p.category));
+    const inMenu = new Set<"Todos" | Category>(sectorProducts.map((p) => p.category));
     const list = categories.slice(1).filter((c) => inMenu.has(c));
     return ["Todos", ...list];
   }, [sectorProducts]);
@@ -146,7 +146,10 @@ function Attendant() {
       id = r.proposal.id;
       return r.state;
     });
-    if (err) return toast.error(err);
+    if (err) {
+      toast.error(err);
+      return;
+    }
     setTrackingId(id);
     setCart({});
     setOpId(newOp());

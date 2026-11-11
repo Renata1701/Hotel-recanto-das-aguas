@@ -357,7 +357,7 @@ export function Countdown({ expiresAt }: { expiresAt: number }) {
   );
 }
 
-export function CredentialCodes({ code, compact }: { code: string; compact?: boolean }) {
+export function CredentialCodes({ code, compact }: { code: string; compact?: boolean | undefined }) {
   const credential = normalizeCredentialCode(code);
   const [qrOrigin, setQrOrigin] = useState<string | null>(() =>
     typeof window !== "undefined" ? syncGuestQrOrigin() : null,
@@ -612,7 +612,7 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
   );
 }
 
-export function Panel({ title, action, children, className }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string }) {
+export function Panel({ title, action, children, className }: { title?: ReactNode; action?: ReactNode; children: ReactNode; className?: string | undefined }) {
   return (
     <section className={cn("rounded-2xl border border-border/90 bg-card shadow-soft", className)}>
       {(title || action) && (

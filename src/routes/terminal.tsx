@@ -58,7 +58,10 @@ function TerminalPage() {
 
   const resolve = (decision: "confirmar" | "recusar") => {
     if (!pending || !identified || "error" in identified) return;
-    if (!pin.trim()) return toast.error("Informe o PIN do hóspede.");
+    if (!pin.trim()) {
+      toast.error("Informe o PIN do hóspede.");
+      return;
+    }
     const lock = getPinLock(identified.cred.id);
     if (lock && lock.until > Date.now()) {
       toast.error("PIN bloqueado por 15 minutos após tentativas inválidas.");

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { normalizeCredentialCode } from "@/lib/guest-access-url";
 import { getState, useStore } from "@/lib/store";
 
-type Search = { codigo?: string; sucesso?: string | boolean };
+type Search = { codigo?: string | undefined; sucesso?: string | boolean | undefined };
 
 /** QR ou link de acesso — tela mobile para token (ativação ou PIN). */
 export const Route = createFileRoute("/acesso")({

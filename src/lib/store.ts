@@ -7,6 +7,7 @@ import { FICTIONAL_DEMO_GUEST, RENATA_DEMO_GUEST } from "./demo-client";
 import { DomainError, expireStale, type Product, type Sector, type State } from "./domain";
 import { HOTEL_ROOMS } from "./hotel-rooms";
 import { seedState } from "./seed";
+import { migrateCatalog } from "./catalog-migration";
 
 const KEY = "rda-state-v1";
 let state: State | null = null;
@@ -89,7 +90,7 @@ function normalizeLoadedState(parsed: State): { state: State; changed: boolean }
 
 function load(): State {
   if (state) return state;
-  if (typeof window === "undefined") return (state = seedState());
+  if (typeof window === "undefined") return serverSnapshot;
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) {
@@ -97,8 +98,9 @@ function load(): State {
     } else {
       const parsed = JSON.parse(raw) as State;
       const { state: normalized, changed } = normalizeLoadedState(parsed);
-      state = normalized;
-      if (changed) persist();
+      const migrated = migrateCatalog(normalized);
+      state = migrated;
+      if (changed || migrated !== parsed) persist();
     }
   } catch {
     state = seedState();
@@ -118,7 +120,11 @@ function emit() {
 if (typeof window !== "undefined") {
   window.addEventListener("storage", (e) => {
     if (e.key === KEY && e.newValue) {
-      state = JSON.parse(e.newValue);
+      const saved = JSON.parse(e.newValue) as State;
+      const { state: normalized, changed } = normalizeLoadedState(saved);
+      const migrated = migrateCatalog(normalized);
+      state = migrated;
+      if (changed || migrated !== saved) persist();
       emit();
     }
   });
