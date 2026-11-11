@@ -14,6 +14,7 @@ import {
   blockCredential,
   brl,
   closeStay,
+  formatStayPeriod,
   registerPayment,
   reissueCredential,
   type PaymentMethod,
@@ -145,6 +146,9 @@ function RecepcaoPage() {
                           <span className="block truncate font-semibold">{stayHolderName(st) ?? stayPlaceLabel(st)}</span>
                           {stayHolderName(st) ? (
                             <span className="text-[11px] text-muted-foreground">{stayPlaceLabel(st)}</span>
+                          ) : null}
+                          {formatStayPeriod(st) ? (
+                            <span className="block text-[10px] text-muted-foreground">{formatStayPeriod(st)}</span>
                           ) : null}
                         </div>
                         <span className="shrink-0 tabular text-xs font-medium text-primary">{brl(bals.due)}</span>

@@ -49,6 +49,11 @@ export interface Stay {
   status: AccountStatus;
   openedAt: number;
   closedAt?: number | undefined;
+  /** Hospedagem — datas calendário (YYYY-MM-DD). */
+  checkInDate?: string | undefined;
+  checkOutDate?: string | undefined;
+  /** Day use — término da permanência (epoch ms). */
+  dayUseEndsAt?: number | undefined;
 }
 
 export type CredentialStatus = "ativa" | "bloqueada" | "expirada" | "revogada";
@@ -397,9 +402,50 @@ export function loginCredential(s: State, code: string, pin: string) {
   return cred;
 }
 
+function parseDayUseEndTime(time: string, now: number): number {
+  const trimmed = time.trim();
+  const match = /^(\d{1,2}):(\d{2})$/.exec(trimmed);
+  if (!match) throw new DomainError("Informe o horário de saída (HH:MM).");
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) throw new DomainError("Horário inválido.");
+  const end = new Date(now);
+  end.setHours(hours, minutes, 0, 0);
+  if (end.getTime() <= now) throw new DomainError("O horário de day use deve ser no futuro.");
+  return end.getTime();
+}
+
+export function formatStayPeriod(stay: Stay): string | undefined {
+  if (stay.type === "hospedagem" && stay.checkInDate && stay.checkOutDate) {
+    return `${formatBrDate(stay.checkInDate)} → ${formatBrDate(stay.checkOutDate)}`;
+  }
+  if (stay.type === "dayuse" && stay.dayUseEndsAt) {
+    return `Até ${formatBrTime(stay.dayUseEndsAt)}`;
+  }
+  return undefined;
+}
+
+function formatBrDate(isoDate: string) {
+  const [y, m, d] = isoDate.split("-");
+  if (!y || !m || !d) return isoDate;
+  return `${d}/${m}/${y}`;
+}
+
+function formatBrTime(epoch: number) {
+  return new Date(epoch).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+
 export function openStay(
   s: State,
-  input: { type: StayType; room?: string | undefined; guests: GuestInput[]; medium: CredentialMedium },
+  input: {
+    type: StayType;
+    room?: string | undefined;
+    guests: GuestInput[];
+    medium: CredentialMedium;
+    checkInDate?: string | undefined;
+    checkOutDate?: string | undefined;
+    dayUseEndTime?: string | undefined;
+  },
   actor: string,
   now = Date.now(),
 ) {
@@ -415,7 +461,16 @@ export function openStay(
     if (!input.room?.trim()) throw new DomainError("Hospedagem exige quarto.");
     if (s.stays.some((st) => st.room === input.room && st.status !== "encerrada"))
       throw new DomainError(`Quarto ${input.room} já possui permanência aberta.`);
+    if (!input.checkInDate?.trim() || !input.checkOutDate?.trim())
+      throw new DomainError("Informe check-in e check-out.");
+    if (input.checkOutDate <= input.checkInDate)
+      throw new DomainError("Check-out deve ser após o check-in.");
   }
+  if (input.type === "dayuse") {
+    if (!input.dayUseEndTime?.trim()) throw new DomainError("Informe até qual horário o hóspede fica.");
+  }
+  const dayUseEndsAt =
+    input.type === "dayuse" && input.dayUseEndTime ? parseDayUseEndTime(input.dayUseEndTime, now) : undefined;
   const participants: Participant[] = guests.map((g) => ({
     id: uid("par"),
     name: g.name,
@@ -430,6 +485,10 @@ export function openStay(
     participants,
     status: "aberta",
     openedAt: now,
+    ...(input.type === "hospedagem"
+      ? { checkInDate: input.checkInDate!.trim(), checkOutDate: input.checkOutDate!.trim() }
+      : {}),
+    ...(dayUseEndsAt !== undefined ? { dayUseEndsAt } : {}),
   };
   const creds: Credential[] = participants.map((p) => ({
     id: uid("crd"),
@@ -457,7 +516,12 @@ export function openStay(
 export function registerFictionalGuest(s: State, name: string, actor = "Cadastro fictício", now = Date.now()) {
   const trimmed = name.trim();
   if (trimmed.length < 2) throw new DomainError("Informe seu nome completo.");
-  return openStay(s, { type: "dayuse", guests: [{ name: trimmed }], medium: "celular" }, actor, now);
+  return openStay(
+    s,
+    { type: "dayuse", guests: [{ name: trimmed }], medium: "celular", dayUseEndTime: "18:00" },
+    actor,
+    now,
+  );
 }
 
 export function registerPayment(

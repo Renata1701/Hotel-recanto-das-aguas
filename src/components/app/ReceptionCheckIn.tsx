@@ -25,6 +25,29 @@ function newRow(): CompanionRow {
   return { id: crypto.randomUUID(), name: "" };
 }
 
+function isoDateLocal(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function defaultCheckInDate() {
+  return isoDateLocal(new Date());
+}
+
+function defaultCheckOutDate() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return isoDateLocal(d);
+}
+
+function defaultDayUseEndTime() {
+  const d = new Date();
+  d.setHours(d.getHours() + 6, 0, 0, 0);
+  return `${String(d.getHours()).padStart(2, "0")}:00`;
+}
+
 export type CheckInSuccessResult = {
   stayId: string;
   holderName: string;
@@ -64,6 +87,9 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
   const [holderPhone, setHolderPhone] = useState("");
   const [companions, setCompanions] = useState<CompanionRow[]>([]);
   const [medium, setMedium] = useState<CredentialMedium>("celular");
+  const [checkInDate, setCheckInDate] = useState(defaultCheckInDate);
+  const [checkOutDate, setCheckOutDate] = useState(defaultCheckOutDate);
+  const [dayUseEndTime, setDayUseEndTime] = useState(defaultDayUseEndTime);
   const [issuedCreds, setIssuedCreds] = useState<Credential[]>([]);
 
   const freeCount = rooms.filter((r) => r.status === "livre").length;
@@ -75,6 +101,9 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
     setCompanions([]);
     setRoom(null);
     setType("hospedagem");
+    setCheckInDate(defaultCheckInDate());
+    setCheckOutDate(defaultCheckOutDate());
+    setDayUseEndTime(defaultDayUseEndTime());
   };
 
   const selectRoom = (r: RoomAvailability) => {
@@ -116,6 +145,9 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
           room: type === "hospedagem" ? room ?? undefined : undefined,
           guests,
           medium,
+          checkInDate: type === "hospedagem" ? checkInDate : undefined,
+          checkOutDate: type === "hospedagem" ? checkOutDate : undefined,
+          dayUseEndTime: type === "dayuse" ? dayUseEndTime : undefined,
         },
         actor,
       );
@@ -168,6 +200,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
             onClick={() => {
               setType("dayuse");
               setRoom(null);
+              setDayUseEndTime(defaultDayUseEndTime());
             }}
             className={cn(
               "flex items-center gap-2 rounded-xl border p-3 text-left transition-all",
@@ -227,10 +260,49 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
               Quarto <span className="font-semibold text-foreground">{room}</span>
             </p>
           ) : null}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="check-in-date" className="text-xs">
+                Check-in *
+              </Label>
+              <Input
+                id="check-in-date"
+                type="date"
+                value={checkInDate}
+                onChange={(e) => setCheckInDate(e.target.value)}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="check-out-date" className="text-xs">
+                Check-out *
+              </Label>
+              <Input
+                id="check-out-date"
+                type="date"
+                value={checkOutDate}
+                min={checkInDate}
+                onChange={(e) => setCheckOutDate(e.target.value)}
+                className="h-9"
+              />
+            </div>
+          </div>
         </Section>
       ) : (
         <Section title="2 · Day use">
-          <p className="text-xs text-muted-foreground">Sem quarto — permanência day use na comanda digital.</p>
+          <div className="space-y-1">
+            <Label htmlFor="day-use-until" className="text-xs">
+              Fica até (horário) *
+            </Label>
+            <Input
+              id="day-use-until"
+              type="time"
+              value={dayUseEndTime}
+              onChange={(e) => setDayUseEndTime(e.target.value)}
+              className="h-9 max-w-[10rem]"
+            />
+            <p className="text-[11px] text-muted-foreground">Hoje, até o horário informado.</p>
+          </div>
         </Section>
       )}
 

@@ -1,5 +1,38 @@
-import type { Product, State } from "./domain";
+import type { Product, Proposal, State } from "./domain";
+import { PROPOSAL_TTL_MS } from "./domain";
 import { FICTIONAL_DEMO_GUEST, RENATA_DEMO_GUEST } from "./demo-client";
+
+function isoDateLocal(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function addDays(base: Date, days: number) {
+  const d = new Date(base);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+/** Referência “agora” para o hotel em operação (seed recalculado a cada reset). */
+function seedClock() {
+  const now = Date.now();
+  const today = new Date();
+  const openedMorning = now - 5 * 3600e3;
+  const dayUseEnd = new Date(today);
+  dayUseEnd.setHours(20, 0, 0, 0);
+  if (dayUseEnd.getTime() <= now) dayUseEnd.setHours(23, 0, 0, 0);
+  return {
+    now,
+    openedMorning,
+    openedYesterday: now - 22 * 3600e3,
+    checkIn: isoDateLocal(today),
+    checkOutShort: isoDateLocal(addDays(today, 2)),
+    checkOutLong: isoDateLocal(addDays(today, 4)),
+    dayUseEnd: dayUseEnd.getTime(),
+  };
+}
 
 const products: Product[] = [
   // —— Bar da Piscina ——
@@ -68,7 +101,106 @@ const products: Product[] = [
 ];
 
 export function seedState(): State {
-  const t = Date.UTC(2026, 10, 7, 13, 0);
+  const c = seedClock();
+  const t0 = c.openedMorning;
+  const proposals: Proposal[] = [
+    {
+      id: "prp_pend_marina",
+      operationId: "op-marina-bar-1",
+      stayId: "sty_du1",
+      participantId: "par_marina",
+      credentialId: "crd_marina",
+      sector: "Bar da Piscina",
+      attendant: "Lucas (bar)",
+      items: [{ productId: "p6", name: "Caipirinha", unitPrice: 2600, qty: 2 }],
+      total: 5200,
+      status: "aguardando",
+      createdAt: c.now - 90_000,
+      expiresAt: c.now - 90_000 + PROPOSAL_TTL_MS,
+    },
+    {
+      id: "prp_pend_ana",
+      operationId: "op-ana-lanche-1",
+      stayId: "sty_208",
+      participantId: "par_ana",
+      credentialId: "crd_ana",
+      sector: "Lanchonete",
+      attendant: "Bia (lanchonete)",
+      items: [{ productId: "l10", name: "Sanduíche natural", unitPrice: 2400, qty: 1 }],
+      total: 2400,
+      status: "aguardando",
+      createdAt: c.now - 45_000,
+      expiresAt: c.now - 45_000 + PROPOSAL_TTL_MS,
+    },
+    {
+      id: "prp_conf_joao",
+      operationId: "op-joao-rest-1",
+      stayId: "sty_203",
+      participantId: "par_joao",
+      credentialId: "crd_joao",
+      sector: "Restaurante",
+      attendant: "Carla (restaurante)",
+      items: [{ productId: "r06", name: "Frango grelhado", unitPrice: 6800, qty: 1 }],
+      total: 6800,
+      status: "confirmada",
+      createdAt: c.now - 3_600_000,
+      expiresAt: c.now - 3_600_000 + PROPOSAL_TTL_MS,
+      resolvedAt: c.now - 3_500_000,
+      resolvedVia: "sessao",
+    },
+    {
+      id: "prp_conf_renata",
+      operationId: "op-renata-bar-1",
+      stayId: "sty_210",
+      participantId: "par_renata",
+      credentialId: "crd_renata",
+      sector: "Bar da Piscina",
+      attendant: "Lucas (bar)",
+      items: [
+        { productId: "p1", name: "Cerveja long neck", unitPrice: 1400, qty: 2 },
+        { productId: "p2", name: "Água de coco", unitPrice: 1200, qty: 1 },
+      ],
+      total: 4000,
+      status: "confirmada",
+      createdAt: c.now - 2_400_000,
+      expiresAt: c.now - 2_400_000 + PROPOSAL_TTL_MS,
+      resolvedAt: c.now - 2_300_000,
+      resolvedVia: "terminal",
+    },
+    {
+      id: "prp_conf_rafael",
+      operationId: "op-rafael-bar-2",
+      stayId: "sty_208",
+      participantId: "par_rafael",
+      credentialId: "crd_rafael",
+      sector: "Bar da Piscina",
+      attendant: "Lucas (bar)",
+      items: [{ productId: "b09", name: "Gin tônica", unitPrice: 3400, qty: 2 }],
+      total: 6800,
+      status: "confirmada",
+      createdAt: c.now - 1_800_000,
+      expiresAt: c.now - 1_800_000 + PROPOSAL_TTL_MS,
+      resolvedAt: c.now - 1_750_000,
+      resolvedVia: "sessao",
+    },
+    {
+      id: "prp_conf_pedro",
+      operationId: "op-pedro-lanche-1",
+      stayId: "sty_du2",
+      participantId: "par_pedro",
+      credentialId: "crd_pedro",
+      sector: "Lanchonete",
+      attendant: "Bia (lanchonete)",
+      items: [{ productId: "p15", name: "Açaí 500 ml", unitPrice: 2400, qty: 1 }],
+      total: 2400,
+      status: "confirmada",
+      createdAt: c.now - 5_400_000,
+      expiresAt: c.now - 5_400_000 + PROPOSAL_TTL_MS,
+      resolvedAt: c.now - 5_300_000,
+      resolvedVia: "terminal",
+    },
+  ];
+
   return {
     products,
     stays: [
@@ -78,9 +210,11 @@ export function seedState(): State {
         room: "208",
         holderId: "par_rafael",
         status: "aberta",
-        openedAt: t,
+        openedAt: c.openedYesterday,
+        checkInDate: c.checkIn,
+        checkOutDate: c.checkOutLong,
         participants: [
-          { id: "par_rafael", name: "Rafael Souza" },
+          { id: "par_rafael", name: "Rafael Souza", document: "123.456.789-00", phone: "(27) 99911-2200" },
           { id: "par_ana", name: "Ana Souza" },
           { id: "par_clara", name: "Clara Souza" },
         ],
@@ -91,23 +225,36 @@ export function seedState(): State {
         room: "203",
         holderId: "par_joao",
         status: "aberta",
-        openedAt: t,
-        participants: [{ id: "par_joao", name: "João Pereira" }],
+        openedAt: t0,
+        checkInDate: c.checkIn,
+        checkOutDate: c.checkOutShort,
+        participants: [{ id: "par_joao", name: "João Pereira", phone: "(27) 98822-3344" }],
       },
       {
         id: "sty_du1",
         type: "dayuse",
         holderId: "par_marina",
         status: "aberta",
-        openedAt: t,
+        openedAt: t0 + 600_000,
+        dayUseEndsAt: c.dayUseEnd,
         participants: [{ id: "par_marina", name: "Marina Lima" }],
+      },
+      {
+        id: "sty_du2",
+        type: "dayuse",
+        holderId: "par_pedro",
+        status: "aberta",
+        openedAt: t0,
+        dayUseEndsAt: c.dayUseEnd,
+        participants: [{ id: "par_pedro", name: "Pedro Almeida" }],
       },
       {
         id: "sty_fict",
         type: "dayuse",
         holderId: "par_fict",
         status: "aberta",
-        openedAt: t,
+        openedAt: t0 + 300_000,
+        dayUseEndsAt: c.dayUseEnd,
         participants: [{ id: "par_fict", name: FICTIONAL_DEMO_GUEST.name }],
       },
       {
@@ -116,16 +263,33 @@ export function seedState(): State {
         room: RENATA_DEMO_GUEST.room,
         holderId: "par_renata",
         status: "aberta",
-        openedAt: t + 600e3,
-        participants: [{ id: "par_renata", name: RENATA_DEMO_GUEST.name }],
+        openedAt: c.now - 45 * 60_000,
+        checkInDate: c.checkIn,
+        checkOutDate: c.checkOutShort,
+        participants: [{ id: "par_renata", name: RENATA_DEMO_GUEST.name, phone: "(27) 99700-1122" }],
+      },
+      {
+        id: "sty_204",
+        type: "hospedagem",
+        room: "204",
+        holderId: "par_helo",
+        status: "aberta",
+        openedAt: c.openedYesterday,
+        checkInDate: isoDateLocal(addDays(new Date(), -1)),
+        checkOutDate: c.checkOutShort,
+        participants: [
+          { id: "par_helo", name: "Heloísa Martins" },
+          { id: "par_beto", name: "Roberto Martins" },
+        ],
       },
     ],
     credentials: [
-      { id: "crd_rafael", code: "RDA-R4F4-208A", stayId: "sty_208", participantId: "par_rafael", medium: "celular", status: "ativa", pin: "1234", issuedAt: t },
-      { id: "crd_ana", code: "RDA-AN4S-208B", stayId: "sty_208", participantId: "par_ana", medium: "pulseira", status: "ativa", pin: "1234", issuedAt: t },
-      { id: "crd_clara", code: "RDA-CL4R-208C", stayId: "sty_208", participantId: "par_clara", medium: "pulseira", status: "ativa", activationCode: "482913", issuedAt: t },
-      { id: "crd_joao", code: "RDA-J04O-203A", stayId: "sty_203", participantId: "par_joao", medium: "celular", status: "ativa", pin: "1234", issuedAt: t },
-      { id: "crd_marina", code: "RDA-M4R1-DU01", stayId: "sty_du1", participantId: "par_marina", medium: "pulseira", status: "ativa", pin: "1234", issuedAt: t },
+      { id: "crd_rafael", code: "RDA-R4F4-208A", stayId: "sty_208", participantId: "par_rafael", medium: "celular", status: "ativa", pin: "1234", issuedAt: c.openedYesterday },
+      { id: "crd_ana", code: "RDA-AN4S-208B", stayId: "sty_208", participantId: "par_ana", medium: "pulseira", status: "ativa", pin: "1234", issuedAt: c.openedYesterday },
+      { id: "crd_clara", code: "RDA-CL4R-208C", stayId: "sty_208", participantId: "par_clara", medium: "pulseira", status: "ativa", activationCode: "482913", issuedAt: c.openedYesterday },
+      { id: "crd_joao", code: "RDA-J04O-203A", stayId: "sty_203", participantId: "par_joao", medium: "celular", status: "ativa", pin: "1234", issuedAt: t0 },
+      { id: "crd_marina", code: "RDA-M4R1-DU01", stayId: "sty_du1", participantId: "par_marina", medium: "pulseira", status: "ativa", pin: "1234", issuedAt: t0 + 600_000 },
+      { id: "crd_pedro", code: "RDA-P3DR-DU02", stayId: "sty_du2", participantId: "par_pedro", medium: "celular", status: "ativa", pin: "1234", issuedAt: t0 },
       {
         id: "crd_fict",
         code: FICTIONAL_DEMO_GUEST.credential,
@@ -134,7 +298,7 @@ export function seedState(): State {
         medium: "celular",
         status: "ativa",
         pin: FICTIONAL_DEMO_GUEST.pin,
-        issuedAt: t,
+        issuedAt: t0 + 300_000,
       },
       {
         id: "crd_renata",
@@ -144,19 +308,96 @@ export function seedState(): State {
         medium: "celular",
         status: "ativa",
         pin: RENATA_DEMO_GUEST.pin,
-        issuedAt: t + 600e3,
+        issuedAt: c.now - 45 * 60_000,
+      },
+      { id: "crd_helo", code: "RDA-H3L0-204A", stayId: "sty_204", participantId: "par_helo", medium: "celular", status: "ativa", pin: "1234", issuedAt: c.openedYesterday },
+      { id: "crd_beto", code: "RDA-B3T0-204B", stayId: "sty_204", participantId: "par_beto", medium: "pulseira", status: "ativa", pin: "1234", issuedAt: c.openedYesterday },
+    ],
+    proposals,
+    entries: [
+      { id: "ent_seed1", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 5600, description: "Bar da Piscina · 4× Cerveja long neck", author: "Lucas (bar)", at: t0 + 3600e3 },
+      { id: "ent_seed1b", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 1200, description: "Bar da Piscina · 1× Água de coco", author: "Lucas (bar)", at: t0 + 4200e3 },
+      { id: "ent_seed1c", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 3800, description: "Restaurante · 1× Risoto de camarão", author: "Lucas (bar)", at: t0 + 7200e3 },
+      { id: "ent_seed1d", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 900, description: "Lanchonete · 1× Sanduíche natural", author: "Bia (lanchonete)", at: t0 + 9000e3 },
+      { id: "ent_seed1e", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 1600, description: "Bar da Piscina · 2× Caipirinha", author: "Lucas (bar)", at: t0 + 10800e3 },
+      { id: "ent_seed2", stayId: "sty_208", kind: "debito", participantId: "par_clara", amount: 2400, description: "Lanchonete · 1× Açaí 500 ml", author: "Bia (lanchonete)", at: t0 + 5400e3 },
+      {
+        id: "ent_prp_joao",
+        stayId: "sty_203",
+        kind: "debito",
+        proposalId: "prp_conf_joao",
+        participantId: "par_joao",
+        amount: 6800,
+        description: "Restaurante · 1× Frango grelhado",
+        author: "Carla (restaurante)",
+        at: c.now - 3_500_000,
+      },
+      {
+        id: "ent_prp_renata",
+        stayId: "sty_210",
+        kind: "debito",
+        proposalId: "prp_conf_renata",
+        participantId: "par_renata",
+        amount: 4000,
+        description: "Bar da Piscina · 2× Cerveja long neck, 1× Água de coco",
+        author: "Lucas (bar)",
+        at: c.now - 2_300_000,
+      },
+      {
+        id: "ent_prp_rafael",
+        stayId: "sty_208",
+        kind: "debito",
+        proposalId: "prp_conf_rafael",
+        participantId: "par_rafael",
+        amount: 6800,
+        description: "Bar da Piscina · 2× Gin tônica",
+        author: "Lucas (bar)",
+        at: c.now - 1_750_000,
+      },
+      {
+        id: "ent_prp_pedro",
+        stayId: "sty_du2",
+        kind: "debito",
+        proposalId: "prp_conf_pedro",
+        participantId: "par_pedro",
+        amount: 2400,
+        description: "Lanchonete · 1× Açaí 500 ml",
+        author: "Bia (lanchonete)",
+        at: c.now - 5_300_000,
+      },
+      {
+        id: "ent_helo",
+        stayId: "sty_204",
+        kind: "debito",
+        participantId: "par_helo",
+        amount: 13800,
+        description: "Restaurante · 1× Moqueca capixaba",
+        author: "Carla (restaurante)",
+        at: c.now - 4_000_000,
       },
     ],
-    proposals: [],
-    entries: [
-      { id: "ent_seed1", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 5600, description: "Bar da Piscina · 4× Cerveja long neck", author: "Lucas (bar)", at: t + 3600e3 },
-      { id: "ent_seed1b", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 1200, description: "Bar da Piscina · 1× Água de coco", author: "Lucas (bar)", at: t + 4200e3 },
-      { id: "ent_seed1c", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 3800, description: "Restaurante · 1× Risoto de camarão", author: "Lucas (bar)", at: t + 7200e3 },
-      { id: "ent_seed1d", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 900, description: "Lanchonete · 1× Sanduíche natural", author: "Bia (lanchonete)", at: t + 9000e3 },
-      { id: "ent_seed1e", stayId: "sty_208", kind: "debito", participantId: "par_rafael", amount: 1600, description: "Bar da Piscina · 2× Caipirinha", author: "Lucas (bar)", at: t + 10800e3 },
-      { id: "ent_seed2", stayId: "sty_208", kind: "debito", participantId: "par_clara", amount: 2400, description: "Lanchonete · 1× Açaí 500 ml", author: "Bia (lanchonete)", at: t + 5400e3 },
+    payments: [
+      {
+        id: "pay_joao_1",
+        stayId: "sty_203",
+        amount: 5000,
+        method: "Pix",
+        staff: "Recepção",
+        at: c.now - 1_200_000,
+      },
+      {
+        id: "pay_208_1",
+        stayId: "sty_208",
+        amount: 10000,
+        method: "Crédito",
+        staff: "Recepção",
+        at: c.now - 800_000,
+      },
     ],
-    payments: [],
-    audit: [],
+    audit: [
+      { id: "aud_1", actor: "Lucas (bar)", action: "Proposta prp_pend_marina enviada (day use)", at: c.now - 90_000 },
+      { id: "aud_2", actor: "cliente", action: "Proposta prp_conf_renata confirmada · débito lançado", at: c.now - 2_300_000 },
+      { id: "aud_3", actor: "Recepção", action: "Pagamento registrado", at: c.now - 1_200_000 },
+    ],
   };
 }

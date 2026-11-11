@@ -371,7 +371,7 @@ export function GuestCredentialPinForm({
       <Panel title={lockCredential ? "Digite seu PIN" : "Entrar"}>
         <p className="mb-4 text-sm text-muted-foreground">
           {lockCredential
-            ? "Credencial lida pelo QR. Informe seu PIN pessoal (4 dígitos). Demo: 1234 para hóspedes de exemplo."
+            ? "Credencial lida pelo QR. Informe seu PIN pessoal (4 dígitos)."
             : "Hóspede: credencial RDA e PIN. Equipe: usuário (ex. lucas, admin) e senha no mesmo formulário."}
         </p>
         {form}

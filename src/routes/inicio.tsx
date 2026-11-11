@@ -120,35 +120,6 @@ function InicioPage() {
           </div>
         </section>
 
-        <section className="border-t border-stone-200/80 bg-white/60 px-5 py-8 sm:px-8">
-          <div className="mx-auto max-w-7xl text-sm text-stone-600">
-            <p className="staff-home-eyebrow mb-3 text-stone-500">Demonstração UC01</p>
-            <p className="leading-relaxed">
-              <Link to="/cliente/entrar" className="font-medium text-primary hover:underline">
-                /cliente/entrar
-              </Link>{" "}
-              <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">
-                RDA-R4F4-208A
-              </code>{" "}
-              + PIN{" "}
-              <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">1234</code>
-              <span className="mx-2 hidden text-stone-300 sm:inline">·</span>
-              <span className="mt-2 block sm:mt-0 sm:inline">
-                Pulseira{" "}
-                <Link to="/terminal" className="font-medium text-primary hover:underline">
-                  /terminal
-                </Link>
-                {" · "}
-                Clara{" "}
-                <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">
-                  RDA-CL4R-208C
-                </code>{" "}
-                +{" "}
-                <code className="rounded-sm bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-800">482913</code>
-              </span>
-            </p>
-          </div>
-        </section>
       </div>
     </StaffLayout>
   );

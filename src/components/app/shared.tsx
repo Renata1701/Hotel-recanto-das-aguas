@@ -357,7 +357,16 @@ export function Countdown({ expiresAt }: { expiresAt: number }) {
   );
 }
 
-export function CredentialCodes({ code, compact }: { code: string; compact?: boolean | undefined }) {
+export function CredentialCodes({
+  code,
+  compact,
+  kiosk,
+}: {
+  code: string;
+  compact?: boolean | undefined;
+  /** Terminal / totem: QR compacto, sem textos de desenvolvimento. */
+  kiosk?: boolean | undefined;
+}) {
   const credential = normalizeCredentialCode(code);
   const [qrOrigin, setQrOrigin] = useState<string | null>(() =>
     typeof window !== "undefined" ? syncGuestQrOrigin() : null,
@@ -433,7 +442,7 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
         }
       }
 
-      if ((!origin || mismatch) && onLocalDev) {
+      if ((!origin || mismatch) && onLocalDev && !kiosk) {
         setShowOriginHelp(true);
       }
 
@@ -451,7 +460,7 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
       cancelled = true;
       window.removeEventListener("rda-qr-origin", onOrigin);
     };
-  }, []);
+  }, [kiosk]);
 
   const applyOrigin = () => {
     setOriginError(null);
@@ -466,9 +475,11 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
     setShowOriginHelp(false);
   };
 
+  const qrSize = kiosk ? 96 : compact ? 120 : 180;
+
   return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-4">
-      {recommendedOrigin && isOnLocalDev ? (
+    <div className={cn("flex flex-col items-center rounded-2xl bg-card", kiosk ? "gap-2 p-2" : "gap-3 p-4")}>
+      {recommendedOrigin && isOnLocalDev && !kiosk ? (
         <div className="w-full rounded-xl border border-emerald-500/35 bg-emerald-500/10 p-3 text-left text-xs">
           <p className="font-semibold text-foreground">Endereço correto nesta rede</p>
           <p className="mt-1 font-mono text-[11px] break-all">{recommendedOrigin}</p>
@@ -478,12 +489,12 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
           </p>
         </div>
       ) : null}
-      {storedWrongIp ? (
+      {storedWrongIp && !kiosk ? (
         <p className="w-full rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
           O QR estava com IP errado. Use o endereço verde acima ou clique em Usar IP detectado.
         </p>
       ) : null}
-      {showOriginHelp && (
+      {showOriginHelp && !kiosk ? (
         <div className="w-full rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-left text-xs text-foreground">
           <p className="font-semibold">Configure o endereço que o celular vai abrir</p>
           <p className="mt-1 text-muted-foreground">
@@ -533,55 +544,59 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
           ) : null}
           {originError ? <p className="mt-2 text-destructive">{originError}</p> : null}
         </div>
-      )}
+      ) : null}
       {scanUrl ? (
         <>
           <div className="rounded-xl border border-border/80 bg-white p-3 shadow-inner">
-            <QRCodeCanvas
-              id={qrCanvasId}
-              value={scanUrl}
-              size={compact ? 120 : 180}
-              level="H"
-              includeMargin
-            />
+            <QRCodeCanvas id={qrCanvasId} value={scanUrl} size={qrSize} level="H" includeMargin />
           </div>
-          <p className="max-w-full break-all text-center text-[10px] leading-snug text-muted-foreground">{scanUrl}</p>
-          <div className="grid w-full grid-cols-2 gap-2">
+          {!kiosk ? (
+            <p className="max-w-full break-all text-center text-[10px] leading-snug text-muted-foreground">{scanUrl}</p>
+          ) : null}
+          <div className={cn("grid w-full gap-2", kiosk ? "grid-cols-1" : "grid-cols-2")}>
+            {!kiosk ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1 text-xs"
+                onClick={() => window.open(scanUrl, "_blank", "noopener,noreferrer")}
+              >
+                Testar link
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 gap-1 text-xs"
-              onClick={() => window.open(scanUrl, "_blank", "noopener,noreferrer")}
-            >
-              Testar link
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1 text-xs"
+              className={cn("gap-1 text-xs", kiosk ? "h-8" : "h-9")}
               onClick={() => void navigator.clipboard?.writeText(scanUrl)}
             >
               Copiar link
             </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 w-full gap-2 text-sm"
-            onClick={downloadQRCode}
-          >
-            <Download className="size-4" aria-hidden />
-            Baixar QR Code
-          </Button>
+          {!kiosk ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 text-sm"
+              onClick={downloadQRCode}
+            >
+              <Download className="size-4" aria-hidden />
+              Baixar QR Code
+            </Button>
+          ) : null}
         </>
       ) : (
-        <p className="py-6 text-center text-xs text-muted-foreground">Defina o endereço acima para gerar o QR do celular.</p>
+        <p className={cn("text-center text-xs text-muted-foreground", kiosk ? "py-2" : "py-6")}>
+          {kiosk ? "Configure VITE_PUBLIC_APP_URL ou leia uma credencial." : "Defina o endereço acima para gerar o QR do celular."}
+        </p>
       )}
-      <p className="text-center text-xs text-muted-foreground">No celular: câmera abre ativação ou entrada do hóspede.</p>
-      {!showOriginHelp && qrOrigin && typeof window !== "undefined" && isLocalDevHost(window.location.hostname) && (
+      {!kiosk ? (
+        <p className="text-center text-xs text-muted-foreground">No celular: câmera abre ativação ou entrada do hóspede.</p>
+      ) : null}
+      {!kiosk && !showOriginHelp && qrOrigin && typeof window !== "undefined" && isLocalDevHost(window.location.hostname) && (
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
           <button
             type="button"
@@ -606,8 +621,34 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
           </button>
         </div>
       )}
-      <Barcode value={credential} format="CODE128" height={compact ? 40 : 56} width={1.4} fontSize={12} margin={0} background="transparent" />
-      <p className="text-center text-[10px] text-muted-foreground">Código de barras para leitor do atendente / terminal.</p>
+      {!kiosk ? (
+        <>
+          <Barcode value={credential} format="CODE128" height={compact ? 40 : 56} width={1.4} fontSize={12} margin={0} background="transparent" />
+          <p className="text-center text-[10px] text-muted-foreground">Código de barras para leitor do atendente / terminal.</p>
+        </>
+      ) : null}
+      {kiosk && isOnLocalDev && !scanUrl ? (
+        <button
+          type="button"
+          className="text-[10px] text-primary hover:underline"
+          onClick={() => setShowOriginHelp(true)}
+        >
+          Configurar endereço na rede local
+        </button>
+      ) : null}
+      {kiosk && showOriginHelp ? (
+        <div className="w-full rounded-lg border border-border bg-secondary/30 p-2 text-left text-[11px]">
+          <Input
+            value={originDraft}
+            onChange={(e) => setOriginDraft(e.target.value)}
+            className="mb-2 h-8 font-mono text-xs"
+            placeholder="http://192.168.0.14:8081"
+          />
+          <Button type="button" size="sm" className="h-8 w-full text-xs" onClick={applyOrigin}>
+            Aplicar
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
