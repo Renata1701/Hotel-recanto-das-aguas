@@ -22,7 +22,7 @@ export function renderErrorPage(): string {
       <p>Something went wrong on our end. You can try refreshing or head back home.</p>
       <div class="actions">
         <button class="primary" onclick="location.reload()">Try again</button>
-        <a class="secondary" href="/login">Ir para login</a>
+        <a class="secondary" href="/cliente/entrar">Ir para login</a>
       </div>
     </div>
   </body>

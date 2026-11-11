@@ -1,9 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, ChevronLeft, ChevronRight, LogOut, Smartphone, UserPlus, Waves } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Eye, EyeOff, LogOut, Smartphone, UserPlus, Waves } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CredentialCodes, EmptyState, Panel, StatusPill, fmtTime } from "@/components/app/shared";
-import { FICTIONAL_DEMO_GUEST } from "@/lib/demo-client";
 import { ProposalReview } from "@/components/app/ProposalReview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,32 +32,43 @@ import {
   setGuestSession,
   type GuestSession,
 } from "@/lib/client-session";
+import { authenticate, resolvePostLoginPath, setStaffSession } from "@/lib/auth";
 import { commit, getState } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import hero from "@/assets/hero-pool.jpg";
 
 const guestCredentialPattern = /^RDA-[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
-const GUEST_LIST_PAGE_SIZE = 4;
+
+function isGuestAccessCode(value: string) {
+  return guestCredentialPattern.test(value.trim().toUpperCase());
+}
+/** Itens por página — evita “buracos” com listas curtas no painel. */
+const GUEST_LIST_PAGE_SIZE = 10;
 
 function GuestListPagination({
   page,
+  pageSize,
   totalPages,
   total,
   onPageChange,
 }: {
   page: number;
+  pageSize: number;
   totalPages: number;
   total: number;
   onPageChange: (page: number) => void;
 }) {
-  if (total <= GUEST_LIST_PAGE_SIZE) return null;
+  if (totalPages <= 1) return null;
+
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
 
   return (
-    <div className="mt-3 flex flex-col gap-2 border-t border-border/80 pt-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-center text-xs text-muted-foreground sm:text-left">
-        {total} {total === 1 ? "item" : "itens"} · página {page} de {totalPages}
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border/80 pt-3">
+      <p className="text-xs text-muted-foreground">
+        Mostrando <span className="font-medium text-foreground">{from}–{to}</span> de {total}
       </p>
-      <div className="flex justify-center gap-2 sm:justify-end">
+      <div className="flex gap-1.5">
         <Button
           type="button"
           variant="outline"
@@ -70,6 +80,9 @@ function GuestListPagination({
           <ChevronLeft className="size-4" aria-hidden />
           Anterior
         </Button>
+        <span className="grid h-8 min-w-[4.5rem] place-items-center rounded-md border border-border/80 bg-muted/40 px-2 text-xs font-medium tabular">
+          {page} / {totalPages}
+        </span>
         <Button
           type="button"
           variant="outline"
@@ -105,22 +118,41 @@ function GuestPagedPanel<T>({
   items,
   empty,
   renderList,
+  className,
+  listClassName,
 }: {
   title: string;
   items: T[];
   empty: ReactNode;
   renderList: (slice: T[]) => ReactNode;
+  className?: string;
+  /** Scroll interno só quando a lista é longa */
+  listClassName?: string;
 }) {
   const { slice, page, setPage, totalPages, total } = usePagedList(items, GUEST_LIST_PAGE_SIZE);
+  const scrollList = items.length > GUEST_LIST_PAGE_SIZE;
 
   return (
-    <Panel title={title}>
+    <Panel title={title} className={cn("w-full self-start", className)}>
       {items.length === 0 ? (
         empty
       ) : (
         <>
-          {renderList(slice)}
-          <GuestListPagination page={page} totalPages={totalPages} total={total} onPageChange={setPage} />
+          <div
+            className={cn(
+              scrollList && "max-h-[min(52vh,22rem)] overflow-y-auto pr-1",
+              listClassName,
+            )}
+          >
+            {renderList(slice)}
+          </div>
+          <GuestListPagination
+            page={page}
+            pageSize={GUEST_LIST_PAGE_SIZE}
+            totalPages={totalPages}
+            total={total}
+            onPageChange={setPage}
+          />
         </>
       )}
     </Panel>
@@ -163,44 +195,58 @@ export function ClientGuestShell({ title, children }: { title: string; children:
           <div className="mx-auto w-full max-w-[26rem]">{children}</div>
         </main>
 
-        <footer className="shrink-0 border-t border-[var(--login-border)] px-4 py-3 text-center text-xs text-[var(--login-muted)] lg:border-0 lg:pb-6">
-          Área do hóspede — sem app instalado.{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">
-            Acesso da equipe
-          </Link>
+        <footer className="shrink-0 border-t border-[var(--login-border)] px-4 py-4 lg:border-0 lg:pb-6">
+          <p className="text-center text-xs text-[var(--login-muted)]">
+            Hóspede ou equipe — credencial/usuário e PIN/senha no mesmo formulário.
+          </p>
         </footer>
       </div>
     </div>
   );
 }
 
-export function GuestEnterForm({
+/** Hóspede (RDA + PIN) ou equipe (usuário + senha) no mesmo formulário. */
+export function GuestCredentialPinForm({
   initialCode = "",
-  /** Credencial veio do QR — bloqueia edição e destaca campo de token/PIN. */
   lockCredential = false,
+  staffRedirect,
 }: {
   initialCode?: string;
   lockCredential?: boolean;
+  staffRedirect?: string;
 }) {
   const navigate = useNavigate();
   const [code, setCode] = useState(initialCode);
-  const [pin, setPin] = useState("");
+  const [secret, setSecret] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guestMode = useMemo(() => lockCredential || isGuestAccessCode(code), [code, lockCredential]);
 
   useEffect(() => {
     if (initialCode) setCode(initialCode.toUpperCase());
   }, [initialCode]);
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const normalized = code.trim().toUpperCase();
-    if (!guestCredentialPattern.test(normalized)) {
-      setError(
-        "Use o código da credencial (ex.: RDA-R4F4-208A), não o usuário da equipe. Funcionários entram em /login.",
-      );
+  const onCodeChange = (raw: string) => {
+    const upper = raw.toUpperCase();
+    if (upper.startsWith("RDA") || guestCredentialPattern.test(upper)) {
+      setCode(upper);
+    } else {
+      setCode(raw);
+    }
+  };
+
+  const submitStaff = (login: string, password: string) => {
+    const session = authenticate(login, password);
+    if (!session) {
+      setError("Usuário ou senha inválidos. Ex.: admin / 1234 ou lucas / 1234.");
       return;
     }
+    setStaffSession(session);
+    toast.success(`Bem-vindo, ${session.name}`);
+    void navigate({ to: resolvePostLoginPath(staffRedirect, session) });
+  };
+
+  const submitGuest = (normalized: string, pin: string) => {
     const st = getState();
     const cred = st.credentials.find((c) => c.code === normalized);
     if (cred) {
@@ -211,7 +257,7 @@ export function GuestEnterForm({
       }
     }
     try {
-      const logged = loginCredential(st, code, pin);
+      const logged = loginCredential(st, normalized, pin);
       const stay = findStay(st, logged.stayId)!;
       const participant = findParticipant(stay, logged.participantId)!;
       clearPinFailures(logged.id);
@@ -219,7 +265,7 @@ export function GuestEnterForm({
         guestSessionFromCredential(logged, participant.name, stay.room ? `Quarto ${stay.room}` : "Day use"),
       );
       toast.success(`Olá, ${participant.name}`);
-      if (lockCredential) void navigate({ to: "/cliente" });
+      void navigate({ to: "/cliente" });
     } catch {
       if (cred) {
         recordPinFailure(cred.id);
@@ -230,74 +276,124 @@ export function GuestEnterForm({
     }
   };
 
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setError("Informe a credencial RDA-… ou o usuário da equipe.");
+      return;
+    }
+
+    if (guestMode || lockCredential) {
+      const normalized = trimmed.toUpperCase();
+      if (!guestCredentialPattern.test(normalized)) {
+        setError("Credencial inválida. Use o formato RDA-… (QR ou pulseira).");
+        return;
+      }
+      submitGuest(normalized, secret);
+      return;
+    }
+
+    if (trimmed.toUpperCase().startsWith("RDA")) {
+      setError("Credencial incompleta ou inválida. Confira o código ou use seu usuário de equipe.");
+      return;
+    }
+
+    submitStaff(trimmed, secret);
+  };
+
+  const form = (
+    <form onSubmit={submit} className="space-y-3" autoComplete="on">
+      {lockCredential ? (
+        <div className="rounded-xl border border-border/80 bg-secondary/25 px-3 py-2.5 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credencial</p>
+          <p className="font-mono text-sm font-semibold text-foreground">{code || "—"}</p>
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          <Label htmlFor="access-id">Credencial ou usuário</Label>
+          <Input
+            id="access-id"
+            name="access-id"
+            value={code}
+            onChange={(e) => onCodeChange(e.target.value)}
+            placeholder="RDA-R4F4-208A ou admin"
+            className={cn("h-12", guestMode && "font-mono uppercase")}
+            autoComplete="username"
+            autoCorrect="off"
+            spellCheck={false}
+            required
+          />
+        </div>
+      )}
+      <div className="space-y-1.5">
+        <Label htmlFor="access-secret">{lockCredential ? "Token (PIN pessoal)" : guestMode ? "PIN pessoal" : "Senha"}</Label>
+        <div className="relative">
+          <Input
+            id="access-secret"
+            name="access-secret"
+            type={guestMode ? "password" : showSecret ? "text" : "password"}
+            inputMode={guestMode ? "numeric" : undefined}
+            autoComplete={guestMode ? "off" : "current-password"}
+            value={secret}
+            onChange={(e) => setSecret(e.target.value)}
+            className={cn("h-12", !guestMode && "pr-11", guestMode && "text-center text-lg tracking-widest")}
+            placeholder={guestMode ? "••••" : "••••••••"}
+            autoFocus={lockCredential}
+            required
+          />
+          {!guestMode ? (
+            <button
+              type="button"
+              onClick={() => setShowSecret((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:bg-muted"
+              aria-label={showSecret ? "Ocultar senha" : "Mostrar senha"}
+            >
+              {showSecret ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {error ? (
+        <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      <Button type="submit" className="login-resort-btn h-12 w-full border-0 text-base shadow-none">
+        Acessar minha conta
+      </Button>
+    </form>
+  );
+
   return (
-    <ClientGuestShell title={lockCredential ? "Token de acesso" : "Entrar com credencial e PIN"}>
-      <Panel title={lockCredential ? "Acesso pelo QR" : "Já ativei meu acesso"}>
+    <ClientGuestShell title={lockCredential ? "Token de acesso" : "Área de Acesso"}>
+      <Panel title={lockCredential ? "Digite seu PIN" : "Entrar"}>
         <p className="mb-4 text-sm text-muted-foreground">
           {lockCredential
-            ? "Credencial reconhecida pelo QR. Digite o token (PIN) que você definiu na ativação."
-            : "Informe o código da sua credencial (QR ou pulseira) e o PIN que você definiu. Isso não é o login da equipe."}
+            ? "Credencial lida pelo QR. Informe seu PIN pessoal (4 dígitos). Demo: 1234 para hóspedes de exemplo."
+            : "Hóspede: credencial RDA e PIN. Equipe: usuário (ex. lucas, admin) e senha no mesmo formulário."}
         </p>
-        <form onSubmit={submit} className="space-y-3">
-          {lockCredential ? (
-            <div className="rounded-xl border border-border/80 bg-secondary/25 px-3 py-2.5 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credencial</p>
-              <p className="font-mono text-sm font-semibold text-foreground">{code || "—"}</p>
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              <Label htmlFor="code">Credencial</Label>
-              <Input
-                id="code"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="RDA-R4F4-208A"
-                className="h-12 font-mono uppercase"
-                autoComplete="off"
-                required
-              />
-            </div>
-          )}
-          <div className="space-y-1.5">
-            <Label htmlFor="pin">{lockCredential ? "Token (PIN pessoal)" : "PIN pessoal"}</Label>
-            <Input
-              id="pin"
-              type="password"
-              inputMode="numeric"
-              autoComplete="current-password"
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              className="h-12 text-center text-lg tracking-widest"
-              placeholder="••••"
-              autoFocus={lockCredential}
-              required
-            />
-          </div>
-          {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="h-12 w-full text-base">
-            Acessar minha conta
-          </Button>
-        </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Primeira vez?{" "}
-          <Link to="/cliente/ativar" search={code ? { codigo: code } : {}} className="font-medium text-primary hover:underline">
-            Ativar acesso
-          </Link>
-          {" · "}
-          <Link to="/cliente/cadastro" className="font-medium text-primary hover:underline">
-            Cadastro fictício
-          </Link>
-        </p>
-        <details className="mt-4 rounded-xl border bg-secondary/30 px-3 py-2 text-sm text-muted-foreground">
-          <summary className="cursor-pointer font-medium text-foreground">Cliente fictício já cadastrado</summary>
-          <p className="mt-2">
-            Credencial <span className="font-mono text-foreground">{FICTIONAL_DEMO_GUEST.credential}</span> · PIN{" "}
-            <span className="font-mono text-foreground">{FICTIONAL_DEMO_GUEST.pin}</span>
+        {form}
+        {!lockCredential ? (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Primeira vez?{" "}
+            <Link to="/cliente/ativar" search={code && guestMode ? { codigo: code.toUpperCase() } : {}} className="font-medium text-primary hover:underline">
+              Ativar acesso
+            </Link>
           </p>
-        </details>
+        ) : null}
       </Panel>
     </ClientGuestShell>
   );
+}
+
+export function GuestEnterForm(props: {
+  initialCode?: string;
+  lockCredential?: boolean;
+  staffRedirect?: string;
+}) {
+  return <GuestCredentialPinForm {...props} />;
 }
 
 export function GuestRegisterForm() {
@@ -637,8 +733,8 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
         </div>
       </header>
 
-      <main className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-4 sm:gap-5 sm:p-6 lg:grid-cols-2 lg:overflow-hidden lg:p-8 xl:grid-cols-3">
-        <section className="flex min-h-0 flex-col gap-4 lg:min-h-0 lg:overflow-y-auto">
+      <main className="grid auto-rows-min flex-1 items-start gap-4 overflow-y-auto p-4 sm:gap-5 sm:p-6 lg:grid-cols-2 lg:p-8">
+        <section className="flex w-full flex-col gap-4 self-start">
           <Panel title="Saldo da permanência (RF22)" className="shrink-0">
             <div className="grid grid-cols-3 gap-3 text-center text-sm sm:gap-4">
               <div className="rounded-xl bg-secondary/50 px-2 py-3">
@@ -668,62 +764,35 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
             )}
           </Panel>
 
-          <div className="hidden min-h-0 flex-1 flex-col xl:flex">
-            <GuestPagedPanel<Proposal>
-              title="Propostas recentes"
-              items={myProposals}
-              empty={<p className="text-sm text-muted-foreground">Nenhuma proposta ainda.</p>}
-              renderList={propostasList}
-            />
-          </div>
+          <GuestPagedPanel<Proposal>
+            title="Propostas recentes"
+            items={myProposals}
+            empty={<p className="text-sm text-muted-foreground">Nenhuma proposta ainda.</p>}
+            renderList={propostasList}
+          />
 
-          {payments.length > 0 && (
-            <div className="hidden xl:block">
-              <GuestPagedPanel<Payment>
-                title="Pagamentos na conta"
-                items={payments}
-                empty={null}
-                renderList={pagamentosList}
-              />
-            </div>
-          )}
+          {payments.length > 0 ? (
+            <GuestPagedPanel<Payment>
+              title="Pagamentos na conta"
+              items={payments}
+              empty={null}
+              renderList={pagamentosList}
+            />
+          ) : null}
         </section>
 
-        <section className="flex min-h-0 min-w-0 flex-col lg:min-h-0">
+        <section className="flex w-full min-w-0 flex-col gap-3 self-start">
           <GuestPagedPanel<Entry>
             title="Meus consumos confirmados"
             items={myEntries}
             empty={<p className="text-sm text-muted-foreground">Sem lançamentos para você ainda.</p>}
             renderList={consumosList}
           />
-        </section>
-
-        <section className="flex min-h-0 flex-col gap-4 lg:col-span-2 lg:min-h-0 lg:overflow-y-auto xl:col-span-1 xl:col-start-auto">
-          <div className="xl:hidden">
-            <GuestPagedPanel<Proposal>
-              title="Propostas recentes"
-              items={myProposals}
-              empty={<p className="text-sm text-muted-foreground">Nenhuma proposta ainda.</p>}
-              renderList={propostasList}
-            />
-          </div>
-
-          {payments.length > 0 && (
-            <div className="xl:hidden">
-              <GuestPagedPanel<Payment>
-                title="Pagamentos na conta"
-                items={payments}
-                empty={null}
-                renderList={pagamentosList}
-              />
-            </div>
-          )}
-
-          {accountEntries.length > myEntries.length && (
-            <p className="rounded-xl border border-border/80 bg-card/80 px-4 py-3 text-center text-xs text-muted-foreground shadow-soft">
+          {accountEntries.length > myEntries.length ? (
+            <p className="rounded-xl border border-border/80 bg-card/80 px-4 py-3 text-xs leading-relaxed text-muted-foreground shadow-soft">
               Outros participantes também consomem nesta permanência. Você só confirma propostas enviadas para a sua credencial.
             </p>
-          )}
+          ) : null}
         </section>
       </main>
     </div>

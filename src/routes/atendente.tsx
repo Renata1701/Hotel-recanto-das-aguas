@@ -33,7 +33,7 @@ import {
   type Category,
   type Sector,
 } from "@/lib/domain";
-import { commit, getState, useStore } from "@/lib/store";
+import { commit, getState, resetDemo, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/atendente")({
   beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
@@ -222,7 +222,31 @@ function Attendant() {
           </div>
           <div className="min-h-0 flex-1 overflow-hidden">
             {filtered.length === 0 ? (
-              <EmptyState icon={<Search className="size-5" />} title="Nenhum produto encontrado" />
+              <EmptyState
+                icon={<Search className="size-5" />}
+                title={sectorProducts.length === 0 ? "Cardápio não carregado" : "Nenhum produto encontrado"}
+                hint={
+                  sectorProducts.length === 0
+                    ? "Dados antigos no navegador. Restaure a demonstração."
+                    : "Tente outra categoria ou limpe a busca."
+                }
+                action={
+                  sectorProducts.length === 0 ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-3"
+                      onClick={() => {
+                        resetDemo();
+                        toast.success("Cardápio restaurado.");
+                      }}
+                    >
+                      Restaurar cardápio
+                    </Button>
+                  ) : undefined
+                }
+              />
             ) : (
               <div className="grid h-full auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {filtered.map((p) => {

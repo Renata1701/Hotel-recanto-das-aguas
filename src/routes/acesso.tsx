@@ -1,10 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { GuestActivationSuccess, GuestActivateForm, GuestEnterForm, ClientGuestShell } from "@/components/app/ClienteArea";
 import { Panel } from "@/components/app/shared";
 import { Button } from "@/components/ui/button";
 import { normalizeCredentialCode } from "@/lib/guest-access-url";
-import { useStore } from "@/lib/store";
+import { getState, useStore } from "@/lib/store";
 
 type Search = { codigo?: string; sucesso?: string | boolean };
 
@@ -14,6 +14,15 @@ export const Route = createFileRoute("/acesso")({
     codigo: typeof search.codigo === "string" ? normalizeCredentialCode(search.codigo) : undefined,
     sucesso: search.sucesso === "1" || search.sucesso === 1 || search.sucesso === true,
   }),
+  beforeLoad: ({ search }) => {
+    const codigo = typeof search.codigo === "string" ? normalizeCredentialCode(search.codigo) : undefined;
+    const sucesso = search.sucesso === "1" || search.sucesso === 1 || search.sucesso === true;
+    if (!codigo || sucesso) return;
+    const cred = getState().credentials.find((c) => c.code === codigo);
+    if (cred?.pin && cred.status === "ativa") {
+      throw redirect({ to: "/cliente/entrar", search: { codigo, qr: "1" } });
+    }
+  },
   head: () => ({
     meta: [{ title: "Acesso · Recanto das Águas" }],
   }),

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import Barcode from "react-barcode";
 import {
   ConciergeBell,
@@ -10,6 +10,7 @@ import {
   Monitor,
   PanelLeft,
   PanelLeftClose,
+  Download,
   RotateCcw,
   ScanLine,
   UserPlus,
@@ -18,12 +19,20 @@ import {
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
+  clearStoredQrOrigin,
+  discoverLanIPv4,
   guestAccessUrl,
+  isIPv4Host,
   isLocalDevHost,
   normalizeCredentialCode,
   normalizeQrOrigin,
+  originHostIsBroken,
+  qrOriginFromLanIp,
+  qrOriginPortMismatch,
+  qrOriginWithLivePort,
   resolveGuestQrOrigin,
   setStoredQrOrigin,
+  syncGuestQrOrigin,
 } from "@/lib/guest-access-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,7 +108,7 @@ export function StaffLayout({
 
   const logout = () => {
     clearStaffSession();
-    void navigate({ to: "/login" });
+    void navigate({ to: "/cliente/entrar" });
   };
 
   const navLinkClass = cn(
@@ -116,7 +125,7 @@ export function StaffLayout({
         )}
       >
         <Link
-          to={session ? "/inicio" : "/login"}
+          to={session ? "/inicio" : "/cliente/entrar"}
           onClick={() => setMobileOpen(false)}
           className={cn(
             "flex min-w-0 flex-1 items-center text-stone-100",
@@ -218,7 +227,7 @@ export function StaffLayout({
           </button>
         ) : (
           <Link
-            to="/login"
+            to="/cliente/entrar"
             onClick={() => setMobileOpen(false)}
             className={cn(
               "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-stone-200 hover:bg-white/[0.07]",
@@ -350,11 +359,44 @@ export function Countdown({ expiresAt }: { expiresAt: number }) {
 
 export function CredentialCodes({ code, compact }: { code: string; compact?: boolean }) {
   const credential = normalizeCredentialCode(code);
-  const [qrOrigin, setQrOrigin] = useState<string | null>(null);
+  const [qrOrigin, setQrOrigin] = useState<string | null>(() =>
+    typeof window !== "undefined" ? syncGuestQrOrigin() : null,
+  );
   const [originDraft, setOriginDraft] = useState("");
   const [showOriginHelp, setShowOriginHelp] = useState(false);
+  const [originError, setOriginError] = useState<string | null>(null);
+  const [detectedIp, setDetectedIp] = useState<string | null>(null);
+  const portMismatch = qrOrigin && qrOriginPortMismatch(qrOrigin);
 
-  const scanUrl = guestAccessUrl(credential, qrOrigin);
+  const recommendedOrigin = detectedIp ? qrOriginFromLanIp(detectedIp) : null;
+  const liveOrigin =
+    typeof window !== "undefined" && !isLocalDevHost(window.location.hostname)
+      ? window.location.origin
+      : qrOrigin;
+  const scanUrl = guestAccessUrl(credential, liveOrigin);
+  const storedWrongIp =
+    qrOrigin &&
+    detectedIp &&
+    (() => {
+      try {
+        const h = new URL(qrOrigin).hostname;
+        return isIPv4Host(h) && h !== detectedIp;
+      } catch {
+        return false;
+      }
+    })();
+  const isOnLocalDev = typeof window !== "undefined" && isLocalDevHost(window.location.hostname);
+  const qrCanvasId = `qr-code-${credential}`;
+
+  const downloadQRCode = () => {
+    const canvas = document.getElementById(qrCanvasId);
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+    const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    const link = document.createElement("a");
+    link.href = pngUrl;
+    link.download = `qrcode-${credential}.png`;
+    link.click();
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -362,10 +404,43 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
       const origin = await resolveGuestQrOrigin();
       if (cancelled) return;
       setQrOrigin(origin);
-      if (!origin && typeof window !== "undefined" && isLocalDevHost(window.location.hostname)) {
+      const onLocalDev = typeof window !== "undefined" && isLocalDevHost(window.location.hostname);
+      const mismatch = origin ? qrOriginPortMismatch(origin) : false;
+
+      if (onLocalDev) {
+        const lan = await discoverLanIPv4();
+        if (cancelled) return;
+        setDetectedIp(lan);
+        if (lan) {
+          const suggested = qrOriginFromLanIp(lan);
+          if (suggested) setOriginDraft(suggested);
+          if (origin) {
+            try {
+              const h = new URL(origin).hostname;
+              if (isIPv4Host(h) && h !== lan && suggested) {
+                clearStoredQrOrigin();
+                setStoredQrOrigin(suggested);
+                setQrOrigin(suggested);
+                setShowOriginHelp(false);
+              }
+            } catch {
+              /* ignore */
+            }
+          } else if (suggested) {
+            setStoredQrOrigin(suggested);
+            setQrOrigin(suggested);
+          }
+        }
+      }
+
+      if ((!origin || mismatch) && onLocalDev) {
         setShowOriginHelp(true);
-        const port = window.location.port ? `:${window.location.port}` : "";
-        setOriginDraft(`http://192.168.0.0${port}`);
+      }
+
+      if (origin && originHostIsBroken(origin)) {
+        setShowOriginHelp(true);
+        clearStoredQrOrigin();
+        setQrOrigin(null);
       }
     };
     void load();
@@ -379,55 +454,157 @@ export function CredentialCodes({ code, compact }: { code: string; compact?: boo
   }, []);
 
   const applyOrigin = () => {
+    setOriginError(null);
     const next = setStoredQrOrigin(originDraft);
-    if (!next) return;
+    if (!next) {
+      setOriginError(
+        "Informe o IPv4 do PC no Wi‑Fi (cmd: ipconfig). Não use 192.168.1.10 de exemplo nem 192.168.0.0.",
+      );
+      return;
+    }
     setQrOrigin(next);
     setShowOriginHelp(false);
   };
 
   return (
     <div className="flex flex-col items-center gap-3 rounded-2xl bg-card p-4">
+      {recommendedOrigin && isOnLocalDev ? (
+        <div className="w-full rounded-xl border border-emerald-500/35 bg-emerald-500/10 p-3 text-left text-xs">
+          <p className="font-semibold text-foreground">Endereço correto nesta rede</p>
+          <p className="mt-1 font-mono text-[11px] break-all">{recommendedOrigin}</p>
+          <p className="mt-1 text-muted-foreground">
+            Mantenha <strong className="text-foreground">npm run dev</strong> aberto. A porta é a da barra do navegador
+            (se o Vite mudar para 8081, use 8081 — não 8080).
+          </p>
+        </div>
+      ) : null}
+      {storedWrongIp ? (
+        <p className="w-full rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          O QR estava com IP errado. Use o endereço verde acima ou clique em Usar IP detectado.
+        </p>
+      ) : null}
       {showOriginHelp && (
         <div className="w-full rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-left text-xs text-foreground">
-          <p className="font-semibold">Celular não abre localhost</p>
+          <p className="font-semibold">Configure o endereço que o celular vai abrir</p>
           <p className="mt-1 text-muted-foreground">
-            Use o IP do PC na mesma rede Wi‑Fi (ex.: <span className="font-mono">http://192.168.1.10:8080</span>). Abra
-            esse endereço no celular uma vez para testar.
+            PC e celular na <strong>mesma Wi‑Fi</strong>. No PC: <span className="font-mono">ipconfig</span> → IPv4. No
+            celular, abra esse endereço no Chrome <strong>antes</strong> de escanear o QR.
           </p>
+          {detectedIp ? (
+            <p className="mt-2 font-mono text-[11px] text-foreground">
+              IP detectado neste PC: <strong>{detectedIp}</strong>
+            </p>
+          ) : null}
+          {portMismatch && qrOrigin ? (
+            <p className="mt-2 text-amber-900">
+              A porta do QR não bate com esta aba (
+              {qrOriginWithLivePort(qrOrigin) ?? "corrija abaixo"}).
+            </p>
+          ) : null}
           <div className="mt-2 flex gap-2">
             <Input
               value={originDraft}
               onChange={(e) => setOriginDraft(e.target.value)}
               className="h-9 font-mono text-xs"
-              placeholder="http://192.168.1.10:8080"
+              placeholder="http://192.168.1.23:8080"
               aria-label="Endereço do app no celular"
             />
             <Button type="button" size="sm" className="shrink-0" onClick={applyOrigin}>
               Aplicar
             </Button>
           </div>
+          {detectedIp && qrOriginFromLanIp(detectedIp) ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="mt-2 h-8 w-full text-xs"
+              onClick={() => {
+                const auto = qrOriginFromLanIp(detectedIp);
+                if (auto && setStoredQrOrigin(auto)) {
+                  setQrOrigin(auto);
+                  setShowOriginHelp(false);
+                  setOriginError(null);
+                }
+              }}
+            >
+              Usar IP detectado ({detectedIp})
+            </Button>
+          ) : null}
+          {originError ? <p className="mt-2 text-destructive">{originError}</p> : null}
         </div>
       )}
       {scanUrl ? (
         <>
-          <QRCodeSVG value={scanUrl} size={compact ? 120 : 180} level="M" includeMargin />
+          <div className="rounded-xl border border-border/80 bg-white p-3 shadow-inner">
+            <QRCodeCanvas
+              id={qrCanvasId}
+              value={scanUrl}
+              size={compact ? 120 : 180}
+              level="H"
+              includeMargin
+            />
+          </div>
           <p className="max-w-full break-all text-center text-[10px] leading-snug text-muted-foreground">{scanUrl}</p>
+          <div className="grid w-full grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1 text-xs"
+              onClick={() => window.open(scanUrl, "_blank", "noopener,noreferrer")}
+            >
+              Testar link
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1 text-xs"
+              onClick={() => void navigator.clipboard?.writeText(scanUrl)}
+            >
+              Copiar link
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9 w-full gap-2 text-sm"
+            onClick={downloadQRCode}
+          >
+            <Download className="size-4" aria-hidden />
+            Baixar QR Code
+          </Button>
         </>
       ) : (
         <p className="py-6 text-center text-xs text-muted-foreground">Defina o endereço acima para gerar o QR do celular.</p>
       )}
       <p className="text-center text-xs text-muted-foreground">No celular: câmera abre ativação ou entrada do hóspede.</p>
       {!showOriginHelp && qrOrigin && typeof window !== "undefined" && isLocalDevHost(window.location.hostname) && (
-        <button
-          type="button"
-          className="text-[10px] text-primary hover:underline"
-          onClick={() => {
-            setOriginDraft(qrOrigin);
-            setShowOriginHelp(true);
-          }}
-        >
-          Alterar endereço do QR ({normalizeQrOrigin(qrOrigin) ?? qrOrigin})
-        </button>
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+          <button
+            type="button"
+            className="text-[10px] text-primary hover:underline"
+            onClick={() => {
+              setOriginDraft(qrOrigin);
+              setShowOriginHelp(true);
+            }}
+          >
+            Alterar endereço do QR ({normalizeQrOrigin(qrOrigin) ?? qrOrigin})
+          </button>
+          <button
+            type="button"
+            className="text-[10px] text-muted-foreground hover:underline"
+            onClick={() => {
+              clearStoredQrOrigin();
+              setQrOrigin(null);
+              setShowOriginHelp(true);
+            }}
+          >
+            Redefinir QR
+          </button>
+        </div>
       )}
       <Barcode value={credential} format="CODE128" height={compact ? 40 : 56} width={1.4} fontSize={12} margin={0} background="transparent" />
       <p className="text-center text-[10px] text-muted-foreground">Código de barras para leitor do atendente / terminal.</p>
@@ -449,12 +626,23 @@ export function Panel({ title, action, children, className }: { title?: ReactNod
   );
 }
 
-export function EmptyState({ icon, title, hint }: { icon: ReactNode; title: string; hint?: string }) {
+export function EmptyState({
+  icon,
+  title,
+  hint,
+  action,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="flex flex-col items-center gap-2 py-4 text-center">
       <div className="grid size-12 place-items-center rounded-full bg-secondary text-muted-foreground">{icon}</div>
       <p className="text-sm font-medium">{title}</p>
       {hint && <p className="max-w-xs text-xs text-muted-foreground">{hint}</p>}
+      {action}
     </div>
   );
 }

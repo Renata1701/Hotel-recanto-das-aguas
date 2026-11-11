@@ -2,15 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ConciergeBell, MonitorSmartphone, ScanLine, UserPlus } from "lucide-react";
 import hero from "@/assets/hero-pool.jpg";
 import { StaffLayout } from "@/components/app/shared";
-import { getStaffSession, useStaffSession } from "@/lib/auth";
-import { redirect } from "@tanstack/react-router";
+import { requireStaffAuth, useStaffSession } from "@/lib/auth";
 
 export const Route = createFileRoute("/inicio")({
-  beforeLoad: ({ location }) => {
-    if (!getStaffSession()) {
-      throw redirect({ to: "/login", search: { redirect: location.pathname } });
-    }
-  },
+  beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
   head: () => ({
     meta: [{ title: "Início · Recanto das Águas" }],
   }),

@@ -41,6 +41,11 @@ const accounts = [
   },
 ] as const;
 
+/** Usuários da equipe (mesmo formulário de acesso que credencial + PIN). */
+export const staffLoginNames = accounts.map((a) => a.login);
+
+export const UNIFIED_ACCESS_PATH = "/cliente/entrar" as const;
+
 const routeRoles: Record<string, StaffRole[]> = {
   "/inicio": ["atendente", "recepcao", "admin"],
   "/atendente": ["atendente", "admin"],
@@ -118,7 +123,7 @@ export function authenticate(login: string, password: string): StaffSession | nu
 
 const safeRedirect = (path: string | undefined): string | undefined => {
   if (!path || !path.startsWith("/") || path.startsWith("//")) return undefined;
-  if (path === "/login") return undefined;
+  if (path === "/login" || path === UNIFIED_ACCESS_PATH) return undefined;
   return path;
 };
 
@@ -133,7 +138,7 @@ export function canAccessRoute(session: StaffSession | null, pathname: string): 
 export function requireStaffAuth(pathname: string) {
   const session = getStaffSession();
   if (!session) {
-    throw redirect({ to: "/login", search: { redirect: pathname } });
+    throw redirect({ to: UNIFIED_ACCESS_PATH, search: { redirect: pathname } });
   }
   if (!canAccessRoute(session, pathname)) {
     throw redirect({ to: session.homePath });

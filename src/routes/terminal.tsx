@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { DomainError, resolveCredential, resolveProposal } from "@/lib/domain";
 import { clearPinFailures, getPinLock, recordPinFailure } from "@/lib/client-session";
+import { isLocalDevHost } from "@/lib/guest-access-url";
 import { commit, getState, useStore } from "@/lib/store";
 
 export const Route = createFileRoute("/terminal")({
@@ -118,6 +119,13 @@ function TerminalPage() {
       </header>
 
       <main className="mx-auto grid max-w-2xl gap-4 px-4 py-6">
+        {typeof window !== "undefined" && isLocalDevHost(window.location.hostname) ? (
+          <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-foreground">
+            <strong>Para o QR abrir o PIN no celular:</strong> use o <strong>IPv4 do Wi‑Fi</strong> na barra do navegador (ex.{" "}
+            <span className="font-mono">http://192.168.0.23:8080/terminal</span>) e clique{" "}
+            <strong>Usar IP detectado</strong> no QR — depois escaneie.
+          </p>
+        ) : null}
         <Panel title="1 · Ler credencial">
           <CredentialReader onRead={read} demoCodes={demoCodes} />
           {identified && "error" in identified && (

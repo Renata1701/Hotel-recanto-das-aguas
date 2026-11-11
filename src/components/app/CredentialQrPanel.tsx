@@ -24,11 +24,16 @@ export function CredentialQrPanel({
 
   useEffect(() => {
     let cancelled = false;
-    void resolveGuestQrOrigin().then((o) => {
-      if (!cancelled) setOrigin(o);
-    });
+    const load = () => {
+      void resolveGuestQrOrigin().then((o) => {
+        if (!cancelled) setOrigin(o);
+      });
+    };
+    load();
+    window.addEventListener("rda-qr-origin", load);
     return () => {
       cancelled = true;
+      window.removeEventListener("rda-qr-origin", load);
     };
   }, []);
 
@@ -64,8 +69,8 @@ export function CredentialQrPanel({
         </div>
       ) : null}
       <p className="mb-3 text-sm text-muted-foreground">
-        Escaneie com a câmera do celular. Abre a tela para informar o <strong className="font-medium text-foreground">token</strong>{" "}
-        (código de ativação ou PIN, conforme o estágio do hóspede).
+        Escaneie com a câmera do celular. Abre a tela <strong className="font-medium text-foreground">Digite seu PIN</strong> com a
+        credencial já preenchida.
       </p>
       <p className="mb-3 rounded-lg bg-secondary/40 px-3 py-2 font-mono text-center text-xs text-foreground">{normalized}</p>
       <CredentialCodes code={normalized} compact={compact} />

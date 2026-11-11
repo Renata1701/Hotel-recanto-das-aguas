@@ -3,21 +3,63 @@
  * (attendant tab + client tab demo side by side). Replace `commit` with API calls later.
  */
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { DomainError, expireStale, type State } from "./domain";
+import { DomainError, expireStale, type Product, type Sector, type State } from "./domain";
 import { seedState } from "./seed";
 
 const KEY = "rda-state-v1";
 let state: State | null = null;
 const listeners = new Set<() => void>();
 
+const DEFAULT_SECTOR: Sector = "Bar da Piscina";
+
+/** Corrige dados antigos no localStorage (produtos sem setor ou lista vazia). */
+function normalizeLoadedState(parsed: State): { state: State; changed: boolean } {
+  const seed = seedState();
+  const seedById = new Map(seed.products.map((p) => [p.id, p]));
+
+  if (!Array.isArray(parsed.products) || parsed.products.length === 0) {
+    return { state: { ...parsed, products: seed.products }, changed: true };
+  }
+
+  let changed = false;
+  const products = parsed.products.map((p) => {
+    const withSector = p as Product & { sector?: Sector };
+    if (withSector.sector) return withSector as Product;
+    changed = true;
+    const ref = seedById.get(p.id);
+    return {
+      ...p,
+      sector: ref?.sector ?? DEFAULT_SECTOR,
+    } as Product;
+  });
+
+  const ids = new Set(products.map((p) => p.id));
+  const missingFromSeed = seed.products.filter((p) => !ids.has(p.id));
+  if (missingFromSeed.length > 0) {
+    changed = true;
+    products.push(...missingFromSeed);
+  }
+
+  if (!changed) return { state: parsed, changed: false };
+  return { state: { ...parsed, products }, changed: true };
+}
+
 function load(): State {
   if (state) return state;
   if (typeof window === "undefined") return (state = seedState());
   try {
     const raw = localStorage.getItem(KEY);
-    state = raw ? (JSON.parse(raw) as State) : seedState();
+    if (!raw) {
+      state = seedState();
+    } else {
+      const parsed = JSON.parse(raw) as State;
+      const { state: normalized, changed } = normalizeLoadedState(parsed);
+      state = normalized;
+      if (changed) persist();
+    }
   } catch {
     state = seedState();
+    persist();
   }
   return state;
 }
@@ -81,6 +123,12 @@ export function resetDemo() {
   state = seedState();
   persist();
   emit();
+}
+
+/** Vitest: força releitura do localStorage. */
+export function reloadStoreFromStorage() {
+  state = null;
+  return load();
 }
 
 /** Ticking clock for countdowns. */
