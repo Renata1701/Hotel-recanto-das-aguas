@@ -7,7 +7,7 @@ import { authenticate, getStaffSession, resolvePostLoginPath, setStaffSession } 
 import { cn } from "@/lib/utils";
 
 type LoginSearch = {
-  redirect?: string;
+  redirect?: string | undefined;
 };
 
 export const Route = createFileRoute("/login")({
@@ -17,9 +17,10 @@ export const Route = createFileRoute("/login")({
       throw redirect({ to: resolvePostLoginPath(search.redirect, session) });
     }
   },
-  validateSearch: (search: Record<string, unknown>): LoginSearch => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): LoginSearch => {
+    const raw = search["redirect"];
+    return { redirect: typeof raw === "string" ? raw : undefined };
+  },
   head: () => ({
     meta: [
       { title: "Área de Acesso · Recanto das Águas" },

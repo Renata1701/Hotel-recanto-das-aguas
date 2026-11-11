@@ -20,15 +20,16 @@ import {
 } from "@/lib/domain";
 import { commit, useStore } from "@/lib/store";
 
-type RecepcaoSearch = { novo?: boolean };
+type RecepcaoSearch = { novo?: boolean | undefined };
 
 const STAYS_PAGE_SIZE = 6;
 
 export const Route = createFileRoute("/recepcao")({
   beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
-  validateSearch: (search: Record<string, unknown>): RecepcaoSearch => ({
-    novo: search.novo === true || search.novo === "1" || search.novo === 1,
-  }),
+  validateSearch: (search: Record<string, unknown>): RecepcaoSearch => {
+    const raw = search["novo"];
+    return { novo: raw === true || raw === "1" || raw === 1 };
+  },
   head: () => ({
     meta: [
       { title: "Recepção · Recanto das Águas" },
@@ -73,7 +74,10 @@ function RecepcaoPage() {
 
   const pay = () => {
     const cents = Math.round(parseFloat(payAmount.replace(",", ".")) * 100);
-    if (!payStayId || !cents) return toast.error("Informe conta e valor.");
+    if (!payStayId || !cents) {
+      toast.error("Informe conta e valor.");
+      return;
+    }
     const err = commit((s) => registerPayment(s, { stayId: payStayId, amount: cents, method: payMethod }, actor));
     if (err) toast.error(err);
     else {

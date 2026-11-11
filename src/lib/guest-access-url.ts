@@ -1,8 +1,8 @@
 const QR_ORIGIN_KEY = "rda-guest-qr-origin";
 
 const envOrigin =
-  typeof import.meta !== "undefined" && import.meta.env.VITE_PUBLIC_APP_URL
-    ? normalizeQrOrigin(String(import.meta.env.VITE_PUBLIC_APP_URL))
+  typeof import.meta !== "undefined" && import.meta.env["VITE_PUBLIC_APP_URL"]
+    ? normalizeQrOrigin(String(import.meta.env["VITE_PUBLIC_APP_URL"]))
     : undefined;
 
 export function normalizeCredentialCode(code: string) {

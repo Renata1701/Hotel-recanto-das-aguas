@@ -6,14 +6,18 @@ import { Button } from "@/components/ui/button";
 import { normalizeCredentialCode } from "@/lib/guest-access-url";
 import { useStore } from "@/lib/store";
 
-type Search = { codigo?: string; sucesso?: string | boolean };
+type Search = { codigo?: string | undefined; sucesso?: string | boolean | undefined };
 
 /** QR ou link de acesso — tela mobile para token (ativação ou PIN). */
 export const Route = createFileRoute("/acesso")({
-  validateSearch: (search: Record<string, unknown>): Search => ({
-    codigo: typeof search.codigo === "string" ? normalizeCredentialCode(search.codigo) : undefined,
-    sucesso: search.sucesso === "1" || search.sucesso === 1 || search.sucesso === true,
-  }),
+  validateSearch: (search: Record<string, unknown>): Search => {
+    const raw = search["codigo"];
+    const sucesso = search["sucesso"];
+    return {
+      codigo: typeof raw === "string" ? normalizeCredentialCode(raw) : undefined,
+      sucesso: sucesso === "1" || sucesso === 1 || sucesso === true,
+    };
+  },
   head: () => ({
     meta: [{ title: "Acesso · Recanto das Águas" }],
   }),
