@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pack:infinityfree": "powershell -NoProfile -Command \"Compress-Archive -Path 'deploy/infinityfree/htdocs/*' -DestinationPath 'deploy/infinityfree/sitema-hotel-upload.zip' -Force\""
+    "pack:infinityfree": "powershell -NoProfile -ExecutionPolicy Bypass -File deploy/infinityfree/pack.ps1"
   },
   "overrides": {
     "rolldown": "1.2.1"

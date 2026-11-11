@@ -63,42 +63,21 @@ function InicioPage() {
           <div className="relative mx-auto flex min-h-[min(78vh,44rem)] max-w-7xl flex-col justify-end px-5 pb-20 pt-28 sm:px-8 sm:pb-24">
             <p className="staff-home-eyebrow mb-6 text-white/80">Recanto das Águas</p>
             <h1 className="staff-home-title max-w-4xl text-white">
-              <em>Viva o</em>
-              <span className="mt-1 block">recanto</span>
-              <span className="mt-2 block text-[0.55em] font-normal tracking-[0.06em] text-white/90">
-                com a equipe
-              </span>
+              <span className="block">Painel da equipe</span>
             </h1>
             <p className="mt-8 max-w-md text-base leading-relaxed text-white/85 sm:text-lg">
-              Hospedagem, day use e consumo digital — o mesmo cuidado do resort, na operação do dia a dia.
-            </p>
-            <p className="staff-home-scroll-hint pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2">
-              role para ver mais
+              Operação de hospedagem, day use e comanda digital.
             </p>
           </div>
         </section>
 
         <section className="border-t border-stone-200/80 bg-white px-5 py-14 sm:px-8 sm:py-20">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-12 lg:gap-16 lg:items-end">
-            <h2 className="staff-home-section-title lg:col-span-5">
-              Um painel que convida a vivenciar o novo.
-            </h2>
+            <h2 className="staff-home-section-title lg:col-span-5">Bem-vindo</h2>
             <div className="space-y-4 text-[0.9375rem] leading-relaxed text-stone-600 lg:col-span-7">
               <p>
-                Olá, <span className="font-semibold text-stone-800">{firstName}</span> — escolha o setor para
-                continuar. O hóspede acessa{" "}
-                <Link to="/cliente/entrar" className="font-medium text-primary underline-offset-4 hover:underline">
-                  /cliente/entrar
-                </Link>{" "}
-                ou o QR em{" "}
-                <Link
-                  to="/acesso"
-                  search={{ codigo: "RDA-R4F4-208A" }}
-                  className="font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  /acesso
-                </Link>
-                .
+                Olá, <span className="font-semibold text-stone-800">{firstName}</span>. Escolha abaixo a área de
+                trabalho.
               </p>
             </div>
           </div>
@@ -109,7 +88,6 @@ function InicioPage() {
             <div className="mb-10 flex flex-col gap-2 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="staff-home-eyebrow text-stone-500">Áreas de trabalho</p>
-                <p className="mt-2 font-sans text-sm text-stone-500">Atalhos equivalentes ao menu lateral</p>
               </div>
             </div>
             <ul className="grid gap-5 sm:grid-cols-2 sm:gap-6 lg:gap-8">
