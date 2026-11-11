@@ -1,0 +1,7 @@
+2026-11-11T14:55:24.070554Z 0 [System] [MY-010116] [Server] C:\Users\renat\OneDrive\Desktop\bin\mysqld.exe (mysqld 8.0.46) starting as process 24988
+2026-11-11T14:55:24.132613Z 0 [Warning] [MY-010075] [Server] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: ec8d3233-dddf-11f1-b8f7-34bf21669cde.
+mysqld: File 'C:\ProgramData\MySQL\MySQL Server 8.0\Data\auto.cnf' not found (OS errno 13 - Permission denied)
+2026-11-11T14:55:24.141993Z 0 [ERROR] [MY-010183] [Server] Failed to create file(file: 'C:\ProgramData\MySQL\MySQL Server 8.0\Data\auto.cnf', errno 13)
+2026-11-11T14:55:24.143223Z 0 [ERROR] [MY-010076] [Server] Initialization of the server's UUID failed because it could not be read from the auto.cnf file. If this is a new server, the initialization failed because it was not possible to generate a new UUID.
+2026-11-11T14:55:24.143777Z 0 [ERROR] [MY-010119] [Server] Aborting
+2026-11-11T14:55:24.144383Z 0 [System] [MY-010910] [Server] C:\Users\renat\OneDrive\Desktop\bin\mysqld.exe: Shutdown complete (mysqld 8.0.46)  MySQL Community Server - GPL.
