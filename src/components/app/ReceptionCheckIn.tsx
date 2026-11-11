@@ -25,15 +25,36 @@ function newRow(): CompanionRow {
   return { id: crypto.randomUUID(), name: "" };
 }
 
+export type CheckInSuccessResult = {
+  stayId: string;
+  holderName: string;
+  room?: string;
+  type: StayType;
+  credentialCodes: string[];
+};
+
 type CheckInFormProps = {
   actor: string;
   variant?: "page" | "modal";
-  onSuccess?: () => void;
+  onSuccess?: (result: CheckInSuccessResult) => void;
 };
 
+function CheckInSectionCompact({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function CheckInSectionPanel({ title, children }: { title: string; children: ReactNode }) {
+  return <Panel title={title}>{children}</Panel>;
+}
+
 export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: CheckInFormProps) {
-  const state = useStore((s) => s);
-  const rooms = useMemo(() => listRoomAvailability(state), [state.stays]);
+  const stays = useStore((s) => s.stays);
+  const rooms = useMemo(() => listRoomAvailability({ ...getState(), stays }), [stays]);
   const compact = variant === "modal";
 
   const [type, setType] = useState<StayType>("hospedagem");
@@ -108,21 +129,19 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
 
     const creds = getState().credentials.filter((c) => c.stayId === stayId && c.status === "ativa");
     setIssuedCreds(creds);
+    const holderName = guests[0]!.name.trim();
     toast.success("Cliente cadastrado e credenciais emitidas.");
     clearFields();
-    onSuccess?.();
+    onSuccess?.({
+      stayId,
+      holderName,
+      room: type === "hospedagem" ? room ?? undefined : undefined,
+      type,
+      credentialCodes: creds.map((c) => c.code),
+    });
   };
 
-  const Section = compact
-    ? ({ title, children }: { title: string; children: ReactNode }) => (
-        <section className="space-y-2">
-          <h3 className="text-sm font-semibold">{title}</h3>
-          {children}
-        </section>
-      )
-    : ({ title, children }: { title: string; children: ReactNode }) => (
-        <Panel title={title}>{children}</Panel>
-      );
+  const Section = compact ? CheckInSectionCompact : CheckInSectionPanel;
 
   return (
     <div className={cn("flex flex-col", compact ? "gap-4" : "gap-5")}>
@@ -360,10 +379,12 @@ export function ReceptionCheckInDialog({
   open,
   onOpenChange,
   actor,
+  onCheckInSuccess,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   actor: string;
+  onCheckInSuccess?: (result: CheckInSuccessResult) => void;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -376,7 +397,10 @@ export function ReceptionCheckInDialog({
           <ReceptionCheckInForm
             actor={actor}
             variant="modal"
-            onSuccess={() => onOpenChange(false)}
+            onSuccess={(result) => {
+              onCheckInSuccess?.(result);
+              onOpenChange(false);
+            }}
           />
         </div>
       </DialogContent>

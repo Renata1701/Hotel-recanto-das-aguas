@@ -1,5 +1,5 @@
 import type { Product, State } from "./domain";
-import { FICTIONAL_DEMO_GUEST } from "./demo-client";
+import { FICTIONAL_DEMO_GUEST, RENATA_DEMO_GUEST } from "./demo-client";
 
 const products: Product[] = [
   // —— Bar da Piscina ——
@@ -110,6 +110,15 @@ export function seedState(): State {
         openedAt: t,
         participants: [{ id: "par_fict", name: FICTIONAL_DEMO_GUEST.name }],
       },
+      {
+        id: "sty_210",
+        type: "hospedagem",
+        room: RENATA_DEMO_GUEST.room,
+        holderId: "par_renata",
+        status: "aberta",
+        openedAt: t + 600e3,
+        participants: [{ id: "par_renata", name: RENATA_DEMO_GUEST.name }],
+      },
     ],
     credentials: [
       { id: "crd_rafael", code: "RDA-R4F4-208A", stayId: "sty_208", participantId: "par_rafael", medium: "celular", status: "ativa", pin: "1234", issuedAt: t },
@@ -126,6 +135,16 @@ export function seedState(): State {
         status: "ativa",
         pin: FICTIONAL_DEMO_GUEST.pin,
         issuedAt: t,
+      },
+      {
+        id: "crd_renata",
+        code: RENATA_DEMO_GUEST.credential,
+        stayId: "sty_210",
+        participantId: "par_renata",
+        medium: "celular",
+        status: "ativa",
+        pin: RENATA_DEMO_GUEST.pin,
+        issuedAt: t + 600e3,
       },
     ],
     proposals: [],

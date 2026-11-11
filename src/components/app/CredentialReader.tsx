@@ -41,15 +41,24 @@ export function CredentialReader({ onRead, demoCodes }: { onRead: (code: string)
         </div>
         <Button type="submit" className="h-11">Ler</Button>
       </form>
-      {demoCodes && (
-        <div className="flex flex-wrap gap-1.5">
-          {demoCodes.map((d) => (
-            <button key={d.code} onClick={() => onRead(d.code)} className="rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground">
-              {d.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {demoCodes ? (
+        demoCodes.length > 0 ? (
+          <div className="flex flex-wrap gap-1.5">
+            {demoCodes.map((d) => (
+              <button
+                key={d.code}
+                type="button"
+                onClick={() => onRead(d.code)}
+                className="rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-foreground"
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">Nenhum hóspede com credencial ativa. Cadastre na recepção.</p>
+        )
+      ) : null}
     </div>
   );
 }

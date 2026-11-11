@@ -167,6 +167,29 @@ export function resolveCredential(s: State, raw: string) {
   return { cred, stay, participant };
 }
 
+export type CredentialQuickPick = { code: string; label: string };
+
+/** Chips do leitor — todas as credenciais ativas com permanência aberta. */
+export function credentialQuickPicks(state: State): CredentialQuickPick[] {
+  return state.credentials
+    .filter((cred) => cred.status === "ativa")
+    .map((cred) => {
+      const stay = findStay(state, cred.stayId);
+      if (!stay || stay.status !== "aberta") return null;
+      const participant = findParticipant(stay, cred.participantId);
+      const firstName = (participant?.name ?? "Hóspede").split(/\s+/)[0] ?? "Hóspede";
+      const place = stay.room ? stay.room : stay.type === "dayuse" ? "day use" : "—";
+      const medium =
+        cred.medium === "pulseira" ? "pulseira" : cred.medium === "celular" ? "celular" : "";
+      return {
+        code: cred.code,
+        label: medium ? `${firstName} · ${place} (${medium})` : `${firstName} · ${place}`,
+      };
+    })
+    .filter((x): x is CredentialQuickPick => x !== null)
+    .sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
+}
+
 export function balance(s: State, stayId: string) {
   const debits = s.entries
     .filter((e) => e.stayId === stayId)

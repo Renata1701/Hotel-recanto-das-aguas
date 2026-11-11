@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createProposal, loginCredential, resolveProposal } from "@/lib/domain";
+import { createProposal, credentialQuickPicks, loginCredential, resolveProposal } from "@/lib/domain";
 import { seedState as seed } from "@/lib/seed";
 
 describe("UC01 — confirmação só pelo cliente", () => {
@@ -42,5 +42,13 @@ describe("UC01 — confirmação só pelo cliente", () => {
       credentialId: cred.id,
     });
     expect(next.entries.some((e) => e.proposalId === created.proposal.id)).toBe(true);
+  });
+});
+
+describe("credenciais no leitor", () => {
+  it("lista todos os hóspedes ativos do seed", () => {
+    const picks = credentialQuickPicks(seed());
+    expect(picks.length).toBeGreaterThanOrEqual(4);
+    expect(picks.some((p) => p.code === "RDA-R4F4-208A")).toBe(true);
   });
 });

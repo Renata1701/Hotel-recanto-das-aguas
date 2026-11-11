@@ -27,6 +27,7 @@ import {
   brl,
   cancelProposal,
   createProposal,
+  credentialQuickPicks,
   DomainError,
   productsInSector,
   resolveCredential,
@@ -57,13 +58,6 @@ const sectorNav: { id: Sector; label: string; short: string; icon: typeof Waves 
   { id: "Lanchonete", label: "Lanchonete", short: "Lanche", icon: CupSoda },
 ];
 
-const demoCodes = [
-  { code: "RDA-R4F4-208A", label: "Rafael · 208 (celular)" },
-  { code: "RDA-AN4S-208B", label: "Ana · 208 (pulseira)" },
-  { code: "RDA-M4R1-DU01", label: "Marina · day use" },
-  { code: "RDA-J04O-203A", label: "João · 203" },
-];
-
 type Cart = Record<string, { qty: number; note?: string | undefined }>;
 const newOp = () => crypto.randomUUID();
 
@@ -78,6 +72,8 @@ function Attendant() {
   const [credCode, setCredCode] = useState<string | null>(null);
   const [opId, setOpId] = useState(newOp);
   const [trackingId, setTrackingId] = useState<string | null>(null);
+
+  const guestQuickPicks = useMemo(() => credentialQuickPicks(state), [state]);
 
   const identified = useMemo(() => {
     if (!credCode) return null;
@@ -314,7 +310,7 @@ function Attendant() {
 
         <aside className="flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden">
           <Panel title="1 · Identificar consumidor" className="shrink-0 [&>div:last-child]:p-3.5">
-            <CredentialReader onRead={read} demoCodes={demoCodes} />
+            <CredentialReader onRead={read} demoCodes={guestQuickPicks} />
             {identified && "error" in identified && <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{identified.error}</p>}
             {identified && "cred" in identified && (
               <div className="mt-4 flex items-center gap-3 rounded-xl bg-secondary p-3">

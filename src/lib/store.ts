@@ -3,7 +3,9 @@
  * (attendant tab + client tab demo side by side). Replace `commit` with API calls later.
  */
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { FICTIONAL_DEMO_GUEST, RENATA_DEMO_GUEST } from "./demo-client";
 import { DomainError, expireStale, type Product, type Sector, type State } from "./domain";
+import { HOTEL_ROOMS } from "./hotel-rooms";
 import { seedState } from "./seed";
 
 const KEY = "rda-state-v1";
@@ -11,6 +13,45 @@ let state: State | null = null;
 const listeners = new Set<() => void>();
 
 const DEFAULT_SECTOR: Sector = "Bar da Piscina";
+
+const PINNED_DEMO_CREDENTIALS = [FICTIONAL_DEMO_GUEST.credential, RENATA_DEMO_GUEST.credential] as const;
+
+/** Garante hóspedes fixos do demo (ex.: Renata) mesmo com localStorage antigo. */
+function mergePinnedDemoGuests(parsed: State, seed: State): { state: State; changed: boolean } {
+  let changed = false;
+  let stays = parsed.stays;
+  let credentials = parsed.credentials;
+  const knownCodes = new Set(credentials.map((c) => c.code));
+  const openRooms = new Set(
+    stays.filter((s) => s.status !== "encerrada" && s.room).map((s) => s.room!),
+  );
+
+  for (const code of PINNED_DEMO_CREDENTIALS) {
+    if (knownCodes.has(code)) continue;
+    const seedCred = seed.credentials.find((c) => c.code === code);
+    if (!seedCred) continue;
+    const seedStay = seed.stays.find((s) => s.id === seedCred.stayId);
+    if (!seedStay) continue;
+
+    let stayToAdd = seedStay;
+    if (seedStay.room && openRooms.has(seedStay.room)) {
+      const free = HOTEL_ROOMS.find((r) => !openRooms.has(r.number));
+      if (!free) continue;
+      stayToAdd = { ...seedStay, room: free.number };
+    }
+
+    if (!stays.some((s) => s.id === stayToAdd.id)) {
+      stays = [...stays, stayToAdd];
+      if (stayToAdd.room) openRooms.add(stayToAdd.room);
+    }
+    credentials = [...credentials, seedCred];
+    knownCodes.add(code);
+    changed = true;
+  }
+
+  if (!changed) return { state: parsed, changed: false };
+  return { state: { ...parsed, stays, credentials }, changed: true };
+}
 
 /** Corrige dados antigos no localStorage (produtos sem setor ou lista vazia). */
 function normalizeLoadedState(parsed: State): { state: State; changed: boolean } {
@@ -40,8 +81,10 @@ function normalizeLoadedState(parsed: State): { state: State; changed: boolean }
     products.push(...missingFromSeed);
   }
 
-  if (!changed) return { state: parsed, changed: false };
-  return { state: { ...parsed, products }, changed: true };
+  const productState = changed ? { ...parsed, products } : parsed;
+  const { state: withGuests, changed: guestsChanged } = mergePinnedDemoGuests(productState, seed);
+  if (!changed && !guestsChanged) return { state: parsed, changed: false };
+  return { state: withGuests, changed: true };
 }
 
 function load(): State {

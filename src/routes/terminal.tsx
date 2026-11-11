@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Monitor, RotateCcw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState, Panel, StatusPill } from "@/components/app/shared";
 import { ProposalReview } from "@/components/app/ProposalReview";
@@ -9,7 +9,7 @@ import { CredentialQrPanel } from "@/components/app/CredentialQrPanel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { DomainError, resolveCredential, resolveProposal } from "@/lib/domain";
+import { credentialQuickPicks, DomainError, resolveCredential, resolveProposal } from "@/lib/domain";
 import { clearPinFailures, getPinLock, recordPinFailure } from "@/lib/client-session";
 import { isLocalDevHost } from "@/lib/guest-access-url";
 import { commit, getState, useStore } from "@/lib/store";
@@ -24,17 +24,17 @@ export const Route = createFileRoute("/terminal")({
   component: TerminalPage,
 });
 
-const demoCodes = [
-  { code: "RDA-AN4S-208B", label: "Ana · pulseira 208" },
-  { code: "RDA-M4R1-DU01", label: "Marina · day use" },
-];
-
 function TerminalPage() {
   const state = useStore((s) => s);
+  const guestQuickPicks = useMemo(() => credentialQuickPicks(state), [state]);
   const [credCode, setCredCode] = useState<string | null>(null);
-  const [qrCode, setQrCode] = useState(demoCodes[0]!.code);
+  const [qrCode, setQrCode] = useState("");
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!qrCode && guestQuickPicks[0]) setQrCode(guestQuickPicks[0].code);
+  }, [guestQuickPicks, qrCode]);
+
   const qrDisplayCode = credCode ?? qrCode;
 
   const identified = useMemo(() => {
@@ -127,7 +127,7 @@ function TerminalPage() {
           </p>
         ) : null}
         <Panel title="1 · Ler credencial">
-          <CredentialReader onRead={read} demoCodes={demoCodes} />
+          <CredentialReader onRead={read} demoCodes={guestQuickPicks} />
           {identified && "error" in identified && (
             <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{identified.error}</p>
           )}
@@ -141,7 +141,7 @@ function TerminalPage() {
         <CredentialQrPanel
           code={qrDisplayCode}
           compact
-          demoCodes={demoCodes}
+          demoCodes={guestQuickPicks}
           onSelectDemo={(code) => {
             setQrCode(code.trim().toUpperCase());
             toast.message("QR gerado. Aponte o celular para o código.");

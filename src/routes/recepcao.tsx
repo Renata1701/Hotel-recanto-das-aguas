@@ -17,12 +17,21 @@ import {
   registerPayment,
   reissueCredential,
   type PaymentMethod,
+  type Stay,
 } from "@/lib/domain";
 import { commit, useStore } from "@/lib/store";
 
 type RecepcaoSearch = { novo?: boolean };
 
 const STAYS_PAGE_SIZE = 6;
+
+function stayHolderName(st: Stay): string | undefined {
+  return st.participants.find((p) => p.id === st.holderId)?.name;
+}
+
+function stayPlaceLabel(st: Stay): string {
+  return st.room ? `Quarto ${st.room}` : "Day use";
+}
 
 export const Route = createFileRoute("/recepcao")({
   beforeLoad: ({ location }) => requireStaffAuth(location.pathname),
@@ -51,7 +60,14 @@ function RecepcaoPage() {
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState<PaymentMethod>("Pix");
 
-  const openStays = useMemo(() => state.stays.filter((s) => s.status !== "encerrada"), [state.stays]);
+  const openStays = useMemo(
+    () =>
+      state.stays
+        .filter((s) => s.status !== "encerrada")
+        .slice()
+        .sort((a, b) => b.openedAt - a.openedAt),
+    [state.stays],
+  );
   const totalStayPages = Math.max(1, Math.ceil(openStays.length / STAYS_PAGE_SIZE));
   const safeStayPage = Math.min(stayPage, totalStayPages);
 
@@ -121,7 +137,12 @@ function RecepcaoPage() {
                   return (
                     <li key={st.id} className="flex min-h-0 flex-col rounded-xl border bg-secondary/20 p-2.5 text-sm">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold">{st.room ? `Quarto ${st.room}` : "Day use"}</span>
+                        <div className="min-w-0">
+                          <span className="block truncate font-semibold">{stayHolderName(st) ?? stayPlaceLabel(st)}</span>
+                          {stayHolderName(st) ? (
+                            <span className="text-[11px] text-muted-foreground">{stayPlaceLabel(st)}</span>
+                          ) : null}
+                        </div>
                         <span className="shrink-0 tabular text-xs font-medium text-primary">{brl(bals.due)}</span>
                       </div>
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{st.status}</p>
@@ -227,7 +248,8 @@ function RecepcaoPage() {
                   <SelectContent>
                     {openStays.map((st) => (
                       <SelectItem key={st.id} value={st.id}>
-                        {st.room ? `Quarto ${st.room}` : "Day use"} ({brl(balance(state, st.id).due)})
+                        {stayHolderName(st) ? `${stayHolderName(st)} · ${stayPlaceLabel(st)}` : stayPlaceLabel(st)} (
+                        {brl(balance(state, st.id).due)})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -260,7 +282,18 @@ function RecepcaoPage() {
           </div>
         </Panel>
 
-        <ReceptionCheckInDialog open={checkInOpen} onOpenChange={setCheckInOpen} actor={actor} />
+        <ReceptionCheckInDialog
+          open={checkInOpen}
+          onOpenChange={setCheckInOpen}
+          actor={actor}
+          onCheckInSuccess={(result) => {
+            setStayPage(1);
+            setPayStayId(result.stayId);
+            const place = result.room ? `quarto ${result.room}` : "day use";
+            const codes = result.credentialCodes.join(", ");
+            toast.message(`${result.holderName} cadastrado em ${place}. Credencial: ${codes}`);
+          }}
+        />
       </main>
     </StaffLayout>
   );
