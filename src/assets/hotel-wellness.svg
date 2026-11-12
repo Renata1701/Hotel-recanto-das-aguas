@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Spa e wellness  imagem ilustrativa">
+  <defs>
+    <linearGradient id="well-water" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2c4a3e"/>
+      <stop offset="50%" stop-color="#5a8a78"/>
+      <stop offset="100%" stop-color="#2c4a3e"/>
+    </linearGradient>
+    <radialGradient id="well-glow" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#e8ebe3" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#1a2f27" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#1e342b"/>
+  <rect width="1200" height="800" fill="url(#well-glow)"/>
+  <ellipse cx="600" cy="520" rx="420" ry="120" fill="url(#well-water)" opacity="0.85"/>
+  <path d="M200 520 Q400 380 600 520 T1000 520" fill="none" stroke="#9aab8c" stroke-width="3" opacity="0.4"/>
+  <circle cx="600" cy="360" r="90" fill="#9aab8c" opacity="0.2"/>
+  <circle cx="600" cy="360" r="55" fill="#f7f4ee" opacity="0.08"/>
+  <text x="600" y="720" text-anchor="middle" fill="#e8ebe3" font-family="Georgia, serif" font-size="28" opacity="0.88">Wellness  ilustração fictícia</text>
+</svg>

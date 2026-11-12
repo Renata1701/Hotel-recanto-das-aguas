@@ -110,7 +110,7 @@ function RecepcaoPage() {
   };
 
   return (
-    <StaffLayout fillViewport subtitle="Recepção / caixa">
+    <StaffLayout subtitle="Recepção / caixa">
       <main className="flex h-full min-h-0 flex-1 flex-col gap-3 overflow-hidden px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <div>
@@ -154,7 +154,7 @@ function RecepcaoPage() {
                         <span className="shrink-0 tabular text-xs font-medium text-primary">{brl(bals.due)}</span>
                       </div>
                       <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{st.status}</p>
-                      <ul className="mt-1.5 min-h-0 flex-1 space-y-1 overflow-y-auto border-t border-border/60 pt-1.5 text-xs text-muted-foreground">
+                      <ul className="mt-1.5 min-h-0 flex-1 space-y-1 overflow-hidden border-t border-border/60 pt-1.5 text-xs text-muted-foreground">
                         {creds.map((c) => (
                           <li key={c.id} className="rounded-md bg-card/80 px-2 py-1">
                             <span className="block font-mono text-[10px] text-foreground">{c.code}</span>

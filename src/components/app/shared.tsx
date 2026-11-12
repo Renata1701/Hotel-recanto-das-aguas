@@ -82,12 +82,12 @@ const staffNavIcon = (to: string) => {
 export function StaffLayout({
   subtitle,
   children,
-  /** Conteúdo ocupa só a altura da tela, sem scroll da página (ex.: atendente). */
-  fillViewport,
+  /** Permite rolagem só no conteúdo principal (ex.: início editorial). */
+  scrollMain,
 }: {
   subtitle?: string;
   children: ReactNode;
-  fillViewport?: boolean;
+  scrollMain?: boolean;
 }) {
   const session = useStaffSession();
   const nav = useMemo(() => staffNavForRole(session?.role), [session?.role]);
@@ -113,7 +113,7 @@ export function StaffLayout({
   };
 
   const navLinkClass = cn(
-    "flex items-center rounded-lg text-sm font-medium text-stone-300 transition-colors hover:bg-white/[0.07] hover:text-stone-100",
+    "flex items-center rounded-lg text-sm font-medium text-[var(--staff-sidebar-muted)] transition-colors hover:bg-white/[0.07] hover:text-[var(--staff-sidebar-accent)]",
     sidebarMini ? "justify-center px-2 py-2.5 lg:px-2" : "gap-3 px-3 py-2.5",
   );
 
@@ -129,23 +129,23 @@ export function StaffLayout({
           to={session ? "/inicio" : "/cliente/entrar"}
           onClick={() => setMobileOpen(false)}
           className={cn(
-            "flex min-w-0 flex-1 items-center text-stone-100",
+            "flex min-w-0 flex-1 items-center text-[var(--staff-sidebar-accent)]",
             sidebarMini ? "justify-center" : "gap-3",
           )}
           title="Recanto das Águas"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-stone-700/85 text-stone-100 shadow-soft ring-1 ring-stone-500/45">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-[var(--staff-sidebar-accent)] shadow-soft ring-1 ring-white/20">
             <Waves className="size-5" />
           </span>
           {!sidebarMini ? (
             <span className="min-w-0 leading-tight">
-              <span className="block truncate text-base font-semibold tracking-tight text-stone-50">
+              <span className="font-display block truncate text-lg font-medium tracking-tight text-[var(--staff-sidebar-accent)]">
                 Recanto das Águas
               </span>
               {subtitle ? (
-                <span className="block truncate text-xs text-stone-400">{subtitle}</span>
+                <span className="block truncate text-xs text-[var(--staff-sidebar-muted)]">{subtitle}</span>
               ) : (
-                <span className="block text-xs text-stone-400">Sistema da equipe</span>
+                <span className="block text-xs text-[var(--staff-sidebar-muted)]">Sistema da equipe</span>
               )}
             </span>
           ) : null}
@@ -157,7 +157,7 @@ export function StaffLayout({
               if (sidebarMini) setSidebarModePersist("full");
               else setSidebarModePersist("mini");
             }}
-            className="grid size-9 place-items-center rounded-lg text-stone-400 transition-colors hover:bg-white/[0.07] hover:text-stone-100"
+            className="grid size-9 place-items-center rounded-lg text-[var(--staff-sidebar-muted)] transition-colors hover:bg-white/[0.07] hover:text-[var(--staff-sidebar-accent)]"
             title={sidebarMini ? "Expandir menu" : "Menu só ícones"}
             aria-label={sidebarMini ? "Expandir menu" : "Recolher menu para ícones"}
           >
@@ -167,7 +167,7 @@ export function StaffLayout({
       </div>
 
       <nav
-        className={cn("flex-1 space-y-1 overflow-y-auto py-4", sidebarMini ? "px-2" : "px-3")}
+        className={cn("flex-1 space-y-1 overflow-hidden py-4", sidebarMini ? "px-2" : "px-3")}
         aria-label="Menu principal"
       >
         {nav.map((n) => {
@@ -183,7 +183,7 @@ export function StaffLayout({
               className={navLinkClass}
               activeProps={{
                 className: cn(
-                  "bg-staff-nav-active border-l-2 border-accent font-semibold text-stone-50 shadow-sm ring-1 ring-accent/25",
+                  "bg-staff-nav-active border-l-2 border-accent font-semibold text-[var(--staff-sidebar-accent)] shadow-sm ring-1 ring-accent/25",
                   sidebarMini && "justify-center border-l-0",
                 ),
               }}
@@ -197,7 +197,7 @@ export function StaffLayout({
 
       <div className={cn("space-y-1 border-t border-[var(--staff-sidebar-border)] p-3", sidebarMini && "px-2")}>
         {session && !sidebarMini ? (
-          <p className="truncate px-3 py-1.5 text-xs text-stone-500" title={session.name}>
+          <p className="truncate px-3 py-1.5 text-xs text-[var(--staff-sidebar-muted)]" title={session.name}>
             {session.name}
           </p>
         ) : null}
@@ -205,7 +205,7 @@ export function StaffLayout({
           type="button"
           onClick={() => setSidebarModePersist("hidden")}
           className={cn(
-            "hidden w-full items-center rounded-lg px-3 py-2 text-xs text-stone-500 transition-colors hover:bg-white/[0.07] hover:text-stone-200 lg:flex",
+            "hidden w-full items-center rounded-lg px-3 py-2 text-xs text-[var(--staff-sidebar-muted)] transition-colors hover:bg-white/[0.07] hover:text-[var(--staff-sidebar-accent)] lg:flex",
             sidebarMini ? "justify-center px-2" : "gap-2",
           )}
           title="Esconder menu"
@@ -218,7 +218,7 @@ export function StaffLayout({
             type="button"
             onClick={logout}
             className={cn(
-              "flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-stone-300 transition-colors hover:bg-white/[0.07] hover:text-stone-50",
+              "flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-[var(--staff-sidebar-muted)] transition-colors hover:bg-white/[0.07] hover:text-[var(--staff-sidebar-accent)]",
               sidebarMini ? "justify-center px-2" : "gap-3",
             )}
             title={sidebarMini ? "Sair" : undefined}
@@ -231,7 +231,7 @@ export function StaffLayout({
             to="/cliente/entrar"
             onClick={() => setMobileOpen(false)}
             className={cn(
-              "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-stone-200 hover:bg-white/[0.07]",
+              "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--staff-sidebar-accent)] hover:bg-white/[0.07]",
               sidebarMini ? "justify-center px-2" : "gap-3",
             )}
             title={sidebarMini ? "Entrar" : undefined}
@@ -246,7 +246,7 @@ export function StaffLayout({
             if (confirm("Restaurar os dados de demonstração?")) resetDemo();
           }}
           className={cn(
-            "flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-stone-300 transition-colors hover:bg-white/[0.07] hover:text-stone-50",
+            "flex w-full items-center rounded-lg px-3 py-2.5 text-sm text-[var(--staff-sidebar-muted)] transition-colors hover:bg-white/[0.07] hover:text-[var(--staff-sidebar-accent)]",
             sidebarMini ? "justify-center px-2" : "gap-3",
           )}
           title={sidebarMini ? "Restaurar demonstração" : "Restaurar demonstração"}
@@ -271,7 +271,7 @@ export function StaffLayout({
 
       <aside
         className={cn(
-          "staff-sidebar bg-staff-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-stone-600/80 shadow-xl transition-[transform,width] duration-300 ease-out",
+          "staff-sidebar bg-staff-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[var(--staff-sidebar-border)] shadow-xl transition-[transform,width] duration-300 ease-out",
           sidebarMini ? "w-[4.75rem]" : "w-[17.5rem]",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
           !sidebarHidden && "lg:static lg:z-auto lg:shrink-0 lg:translate-x-0 lg:shadow-none",
@@ -308,15 +308,13 @@ export function StaffLayout({
         </div>
         <div
           className={cn(
-            "min-h-0 flex-1",
-            fillViewport ? "flex min-h-0 flex-col overflow-hidden" : "overflow-y-auto",
+            "flex min-h-0 min-w-0 flex-1 flex-col",
+            scrollMain ? "overflow-y-auto overscroll-contain" : "overflow-hidden",
           )}
         >
-          {fillViewport ? (
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
-          ) : (
-            children
-          )}
+          <div className={cn("w-full", scrollMain ? "min-h-min" : "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden")}>
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -660,7 +658,7 @@ export function Panel({ title, action, children, className }: { title?: ReactNod
     <section className={cn("rounded-2xl border border-border/90 bg-card shadow-soft", className)}>
       {(title || action) && (
         <div className="flex items-center justify-between gap-3 border-b border-border/80 px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          <h2 className="font-display text-base font-medium tracking-wide text-foreground">{title}</h2>
           {action}
         </div>
       )}

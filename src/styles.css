@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 4px);
@@ -56,74 +56,83 @@
   --shadow-lift: var(--shadow-lift-v);
 }
 
-/* Paleta resort — carvão, creme e dourado (referência editorial / luxo). */
+/* Paleta resort — referência [Pousada Camurim](https://www.camurimgrande.com.br/): linho, verde e areia. */
 :root {
   --radius: 0.75rem;
-  --background: #f4f2ee;
-  --foreground: #1c1917;
-  --card: #ffffff;
-  --card-foreground: #1c1917;
-  --popover: #ffffff;
-  --popover-foreground: #1c1917;
-  --primary: #3f3a36;
-  --primary-foreground: #faf8f5;
-  --secondary: #e7e5e4;
-  --secondary-foreground: #44403c;
-  --muted: #f5f5f4;
-  --muted-foreground: #78716c;
-  --accent: #b8956a;
-  --accent-foreground: #1c1917;
+  --background: #f7f4ee;
+  --foreground: #2a2926;
+  --card: #fffefb;
+  --card-foreground: #2a2926;
+  --popover: #fffefb;
+  --popover-foreground: #2a2926;
+  --primary: #2c4a3e;
+  --primary-foreground: #f7f4ee;
+  --secondary: #e8ebe3;
+  --secondary-foreground: #3d4f44;
+  --muted: #f0ede6;
+  --muted-foreground: #6b7368;
+  --accent: #9aab8c;
+  --accent-foreground: #1e2e26;
   --destructive: hsl(0 72% 51%);
   --destructive-foreground: hsl(0 0% 100%);
   --success: hsl(152 56% 32%);
   --success-foreground: hsl(0 0% 100%);
   --warning: hsl(42 85% 48%);
   --warning-foreground: hsl(28 20% 16%);
-  --highlight: #f0ebe3;
-  --border: #d6d3d1;
-  --input: #d6d3d1;
-  --ring: #b8956a;
-  --chart-1: #3f3a36;
-  --chart-2: #b8956a;
-  --chart-3: #1c1917;
+  --highlight: #e8ebe3;
+  --border: #d9ddd4;
+  --input: #d9ddd4;
+  --ring: #9aab8c;
+  --chart-1: #2c4a3e;
+  --chart-2: #9aab8c;
+  --chart-3: #1e342b;
   --chart-4: hsl(42 85% 48%);
-  --chart-5: #78716c;
-  --sidebar: #292524;
-  --sidebar-foreground: #f5f5f4;
-  --sidebar-primary: #b8956a;
-  --sidebar-primary-foreground: #1c1917;
-  --sidebar-accent: #44403c;
-  --sidebar-accent-foreground: #f5f5f4;
-  --sidebar-border: #57534e;
-  --sidebar-ring: #c4a574;
-  --gradient-brand: linear-gradient(148deg, #7a6346 0%, #b8956a 46%, #c9ad7a 100%);
-  --gradient-brand-horizontal: linear-gradient(90deg, #1c1917 0%, #57534e 55%, #b8956a 100%);
-  --gradient-surface: linear-gradient(180deg, #f4f2ee 0%, #faf9f7 35%, #f5f5f4 70%, #f4f2ee 100%);
+  --chart-5: #6b7368;
+  --sidebar: #1e342b;
+  --sidebar-foreground: #f0ede6;
+  --sidebar-primary: #9aab8c;
+  --sidebar-primary-foreground: #1e2e26;
+  --sidebar-accent: #2c4a3e;
+  --sidebar-accent-foreground: #f7f4ee;
+  --sidebar-border: #3d5c4e;
+  --sidebar-ring: #b8c4a8;
+  --gradient-brand: linear-gradient(148deg, #1e342b 0%, #2c4a3e 42%, #5a7a68 100%);
+  --gradient-brand-horizontal: linear-gradient(90deg, #1e342b 0%, #2c4a3e 55%, #9aab8c 100%);
+  --gradient-surface: linear-gradient(180deg, #f7f4ee 0%, #faf8f4 40%, #f0ede6 100%);
   --gradient-hero-overlay: linear-gradient(
     165deg,
-    rgb(12 10 9 / 0.25) 0%,
-    rgb(28 25 23 / 0.55) 50%,
-    rgb(12 10 9 / 0.72) 100%
+    rgb(30 52 43 / 0.35) 0%,
+    rgb(44 74 62 / 0.45) 50%,
+    rgb(20 32 27 / 0.75) 100%
   );
-  --gradient-nav-active: linear-gradient(90deg, #44403c 0%, #57534e 45%, rgb(184 149 106 / 0.85) 100%);
-  --gradient-staff-sidebar: linear-gradient(185deg, #57534e 0%, #44403c 48%, #292524 100%);
+  --gradient-nav-active: linear-gradient(90deg, #2c4a3e 0%, #3d5c4e 50%, rgb(154 171 140 / 0.75) 100%);
+  --gradient-staff-sidebar: linear-gradient(188deg, #3d5c4e 0%, #2a4538 46%, #1a2f27 100%);
   --gradient-staff-nav-active: linear-gradient(
     90deg,
-    rgb(184 149 106 / 0.24) 0%,
-    rgb(184 149 106 / 0.06) 100%
+    rgb(154 171 140 / 0.22) 0%,
+    rgb(154 171 140 / 0.05) 100%
   );
-  --staff-sidebar-accent: #e7e5e4;
-  --staff-sidebar-muted: rgb(231 229 228 / 0.72);
-  --staff-sidebar-border: rgb(255 255 255 / 0.12);
-  --shadow-soft-v: 0 1px 2px rgb(28 25 23 / 0.06), 0 1px 3px rgb(28 25 23 / 0.04);
-  --shadow-lift-v: 0 12px 32px -8px rgb(28 25 23 / 0.18), 0 4px 12px rgb(28 25 23 / 0.08);
+  --staff-sidebar-accent: #e8ebe3;
+  --staff-sidebar-muted: rgb(232 235 227 / 0.72);
+  --staff-sidebar-border: rgb(255 255 255 / 0.1);
+  --shadow-soft-v: 0 1px 2px rgb(30 52 43 / 0.06), 0 1px 3px rgb(30 52 43 / 0.04);
+  --shadow-lift-v: 0 16px 40px -12px rgb(30 52 43 / 0.2), 0 4px 14px rgb(30 52 43 / 0.08);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
+  html {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
   body {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
     background: var(--gradient-surface);
     background-attachment: fixed;
     color: var(--color-foreground);
@@ -135,7 +144,8 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
 }
 
@@ -162,7 +172,7 @@
   background-image: var(--gradient-hero-overlay);
 }
 @utility text-gradient-brand {
-  background-image: linear-gradient(90deg, #57534e 0%, #b8956a 55%, #c4a574 100%);
+  background-image: linear-gradient(90deg, #2c4a3e 0%, #5a7a68 55%, #9aab8c 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -183,18 +193,18 @@
   animation: pulse-ring 1.6s ease-out infinite;
 }
 
-/* Login split-screen — creme e carvão (escopo local). */
+/* Login split-screen — linho e verde (escopo local). */
 .login-resort {
-  --login-primary: #57534e;
-  --login-primary-hover: #44403c;
-  --login-focus: #f0ebe3;
-  --login-surface: #f4f2ee;
-  --login-card: #ffffff;
-  --login-ink: #1c1917;
-  --login-muted: #78716c;
-  --login-border: #d6d3d1;
-  --login-input-bg: #f5f5f4;
-  --login-shadow: 0 4px 24px rgb(28 25 23 / 0.08), 0 2px 8px rgb(28 25 23 / 0.04);
+  --login-primary: #2c4a3e;
+  --login-primary-hover: #1e342b;
+  --login-focus: #e8ebe3;
+  --login-surface: #f7f4ee;
+  --login-card: #fffefb;
+  --login-ink: #2a2926;
+  --login-muted: #6b7368;
+  --login-border: #d9ddd4;
+  --login-input-bg: #f0ede6;
+  --login-shadow: 0 4px 24px rgb(30 52 43 / 0.1), 0 2px 8px rgb(30 52 43 / 0.05);
   font-family: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   color: var(--login-ink);
   background: var(--login-surface);
@@ -203,9 +213,9 @@
 .login-resort-hero-overlay {
   background: linear-gradient(
     145deg,
-    rgb(12 10 9 / 0.88) 0%,
-    rgb(41 37 36 / 0.82) 45%,
-    rgb(68 64 60 / 0.68) 100%
+    rgb(20 32 27 / 0.88) 0%,
+    rgb(44 74 62 / 0.78) 48%,
+    rgb(90 122 104 / 0.55) 100%
   );
 }
 
@@ -245,8 +255,8 @@
   font-weight: 600;
   font-size: 0.9375rem;
   color: #faf8f5;
-  background-image: linear-gradient(135deg, #292524 0%, #44403c 45%, #57534e 100%);
-  box-shadow: 0 4px 14px rgb(28 25 23 / 0.22);
+  background-image: linear-gradient(135deg, #1a2f27 0%, #2c4a3e 50%, #3d5c4e 100%);
+  box-shadow: 0 4px 14px rgb(30 52 43 / 0.22);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
@@ -268,11 +278,11 @@
   cursor: not-allowed;
 }
 
-/* Início — referência editorial (ex.: BA'RA Hotel). */
+/* Início — editorial resort (referência Camurim Grande). */
 .staff-home-bara {
-  --bara-surface: #f4f2ee;
-  --bara-ink: #1c1917;
-  --bara-muted: #57534e;
+  --bara-surface: #f7f4ee;
+  --bara-ink: #2a2926;
+  --bara-muted: #5a6b60;
   --font-bara-display: "Cormorant Garamond", "Times New Roman", Georgia, serif;
   background: var(--bara-surface);
   color: var(--bara-ink);
@@ -282,23 +292,19 @@
   background:
     linear-gradient(
       118deg,
-      rgb(12 10 9 / 0.82) 0%,
-      rgb(28 25 23 / 0.45) 38%,
-      rgb(41 37 36 / 0.2) 58%,
-      rgb(12 10 9 / 0.35) 100%
+      rgb(20 32 27 / 0.78) 0%,
+      rgb(44 74 62 / 0.4) 42%,
+      rgb(90 122 104 / 0.15) 58%,
+      rgb(20 32 27 / 0.4) 100%
     ),
     linear-gradient(
       180deg,
-      rgb(12 10 9 / 0.12) 0%,
-      rgb(12 10 9 / 0.08) 35%,
-      rgb(12 10 9 / 0.55) 72%,
-      rgb(12 10 9 / 0.9) 100%
+      rgb(20 32 27 / 0.08) 0%,
+      rgb(20 32 27 / 0.05) 32%,
+      rgb(20 32 27 / 0.5) 70%,
+      rgb(20 32 27 / 0.88) 100%
     ),
-    radial-gradient(
-      ellipse 120% 80% at 100% 50%,
-      rgb(87 83 78 / 0.15) 0%,
-      transparent 55%
-    );
+    radial-gradient(ellipse 110% 70% at 100% 40%, rgb(154 171 140 / 0.2) 0%, transparent 52%);
 }
 
 .staff-home-eyebrow {
@@ -338,9 +344,18 @@
   color: var(--bara-ink);
 }
 
+.staff-home-tagline {
+  font-family: var(--font-bara-display);
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.12em;
+  color: rgb(255 255 255 / 0.88);
+}
+
 .staff-home-card {
-  background: #ffffff;
-  border: 1px solid rgb(28 25 23 / 0.08);
+  background: #fffefb;
+  border: 1px solid rgb(44 74 62 / 0.1);
   transition:
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.35s ease,
@@ -348,8 +363,8 @@
 }
 
 .staff-home-card:hover {
-  border-color: rgb(28 25 23 / 0.14);
-  box-shadow: 0 20px 48px -28px rgb(28 25 23 / 0.35);
+  border-color: rgb(44 74 62 / 0.2);
+  box-shadow: 0 20px 48px -28px rgb(30 52 43 / 0.28);
   transform: translateY(-2px);
 }
 
@@ -372,4 +387,109 @@
 
 .staff-home-card:hover .staff-home-card-cta {
   color: var(--accent);
+}
+
+/* Bloco editorial — imagem + texto (referência Camurim). */
+.staff-home-split {
+  display: grid;
+  min-height: min(28rem, 70vh);
+  background: #fffefb;
+}
+
+@media (min-width: 1024px) {
+  .staff-home-split {
+    grid-template-columns: 1fr 1fr;
+    min-height: min(32rem, 78vh);
+  }
+
+  .staff-home-split--reverse .staff-home-split__media {
+    order: 2;
+  }
+
+  .staff-home-split--reverse .staff-home-split__body {
+    order: 1;
+  }
+}
+
+.staff-home-split__media {
+  position: relative;
+  min-height: 16rem;
+  overflow: hidden;
+  background: var(--muted);
+}
+
+.staff-home-split__media img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.staff-home-split__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .staff-home-split__body {
+    padding: 3rem 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .staff-home-split__body {
+    padding: 3.5rem 3.25rem;
+  }
+}
+
+.staff-home-split__kicker {
+  font-family: var(--font-bara-display);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.05;
+  color: var(--bara-ink);
+}
+
+.staff-home-split__lead {
+  margin-top: 1.25rem;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--bara-ink);
+}
+
+.staff-home-split__text {
+  margin-top: 1.25rem;
+  max-width: 32rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--bara-muted);
+}
+
+.staff-home-menu-btn {
+  margin-top: 1.75rem;
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bara-ink);
+  background: transparent;
+  padding: 0.65rem 1.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bara-ink);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.staff-home-menu-btn:hover {
+  background: var(--bara-ink);
+  color: #fffefb;
 }

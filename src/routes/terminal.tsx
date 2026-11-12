@@ -166,7 +166,7 @@ function TerminalPage() {
           <h2 className="shrink-0 border-b border-border/80 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             2 · Confirmar consumo
           </h2>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div className="min-h-0 flex-1 overflow-hidden p-3">
             {!identified || "error" in identified ? (
               <EmptyState
                 icon={<Monitor className="size-5" />}
@@ -217,7 +217,7 @@ function TerminalPage() {
           {confirmedClients.length === 0 ? (
             <p className="p-3 text-center text-sm text-muted-foreground">Nenhuma confirmação registrada ainda.</p>
           ) : (
-            <ul className="min-h-0 flex-1 divide-y divide-border/80 overflow-y-auto text-sm">
+            <ul className="min-h-0 flex-1 divide-y divide-border/80 overflow-hidden text-sm">
               {confirmedClients.map((row) => (
                 <li key={row.id} className="flex items-center justify-between gap-3 px-3 py-2">
                   <span className="truncate font-medium text-foreground">{row.name}</span>

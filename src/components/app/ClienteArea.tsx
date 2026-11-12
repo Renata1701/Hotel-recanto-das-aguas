@@ -126,24 +126,16 @@ function GuestPagedPanel<T>({
   empty: ReactNode;
   renderList: (slice: T[]) => ReactNode;
   className?: string;
-  /** Scroll interno só quando a lista é longa */
   listClassName?: string;
 }) {
   const { slice, page, setPage, totalPages, total } = usePagedList(items, GUEST_LIST_PAGE_SIZE);
-  const scrollList = items.length > GUEST_LIST_PAGE_SIZE;
-
   return (
     <Panel title={title} className={cn("w-full self-start", className)}>
       {items.length === 0 ? (
         empty
       ) : (
         <>
-          <div
-            className={cn(
-              scrollList && "max-h-[min(52vh,22rem)] overflow-y-auto pr-1",
-              listClassName,
-            )}
-          >
+          <div className={cn("overflow-hidden", listClassName)}>
             {renderList(slice)}
           </div>
           <GuestListPagination
@@ -176,11 +168,12 @@ export function ClientGuestShell({ title, children }: { title: string; children:
             </div>
           </div>
           <div>
-            <h2 className="max-w-md text-3xl font-semibold leading-tight text-white xl:text-4xl">
-              Sua comanda no celular
+            <p className="staff-home-eyebrow text-white/75">Charme — Gastronomia — Wellness</p>
+            <h2 className="font-display mt-4 max-w-md text-3xl font-medium leading-tight text-white xl:text-4xl">
+              Sabores que acolhem. Experiências que permanecem.
             </h2>
             <p className="mt-3 max-w-sm text-base text-white/90">
-              Confirme consumos, acompanhe saldo e fique na sua permanência com segurança.
+              Confirme consumos, acompanhe saldo e viva sua permanência com tranquilidade.
             </p>
           </div>
         </div>
@@ -189,7 +182,7 @@ export function ClientGuestShell({ title, children }: { title: string; children:
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-[#ffffff] lg:w-[42%] lg:max-w-[42%] lg:flex-none lg:bg-[var(--login-surface)]">
         <main
           aria-label={title}
-          className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-4 py-6 sm:px-8 lg:py-8"
+          className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-4 py-6 sm:px-8 lg:py-8"
         >
           <div className="mx-auto w-full max-w-[26rem]">{children}</div>
         </main>
@@ -732,7 +725,7 @@ export function GuestHome({ guest, state }: { guest: GuestSession; state: State 
         </div>
       </header>
 
-      <main className="grid auto-rows-min flex-1 items-start gap-4 overflow-y-auto p-4 sm:gap-5 sm:p-6 lg:grid-cols-2 lg:p-8">
+      <main className="grid min-h-0 flex-1 auto-rows-min items-start gap-4 overflow-hidden p-4 sm:gap-5 sm:p-6 lg:grid-cols-2 lg:p-8">
         <section className="flex w-full flex-col gap-4 self-start">
           <Panel title="Saldo da permanência (RF22)" className="shrink-0">
             <div className="grid grid-cols-3 gap-3 text-center text-sm sm:gap-4">

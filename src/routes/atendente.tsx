@@ -163,11 +163,11 @@ function Attendant() {
   };
 
   return (
-    <StaffLayout fillViewport subtitle={`Atendimento · ${ATTENDANT}`}>
+    <StaffLayout subtitle={`Atendimento · ${ATTENDANT}`}>
       <main className="grid h-full min-h-0 w-full flex-1 gap-2 overflow-hidden p-2 sm:gap-3 sm:p-3 lg:grid-cols-[9.5rem_minmax(0,1fr)_min(22rem,30vw)] lg:grid-rows-[minmax(0,1fr)]">
         <aside className="flex min-h-0 min-w-0 flex-col self-stretch">
           <nav
-            className="flex h-full min-h-0 flex-row gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-card p-1.5 shadow-soft lg:flex lg:flex-1 lg:flex-col lg:gap-1 lg:overflow-hidden lg:p-2"
+            className="flex h-full min-h-0 flex-row flex-wrap gap-1.5 overflow-hidden rounded-xl border border-border/80 bg-card p-1.5 shadow-soft lg:flex lg:flex-1 lg:flex-col lg:gap-1 lg:p-2"
             aria-label="Setor de atendimento"
           >
             <p className="hidden w-full px-1.5 pb-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-muted-foreground lg:block">
@@ -208,7 +208,7 @@ function Attendant() {
                 className="h-10 w-full rounded-xl border-border/80 bg-card pl-9 text-sm shadow-sm"
               />
             </div>
-            <div className="flex shrink-0 gap-1 overflow-x-auto">
+            <div className="flex shrink-0 flex-wrap gap-1 overflow-hidden">
             {categoryOptions.map((c) => (
               <button
                 key={c}
@@ -225,7 +225,7 @@ function Attendant() {
             ))}
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <div className="min-h-0 flex-1 overflow-hidden overscroll-none">
             {filtered.length === 0 ? (
               <EmptyState
                 icon={<Search className="size-5" />}
@@ -295,7 +295,7 @@ function Attendant() {
           {myHistory.length > 0 && (
             <details className="shrink-0 rounded-xl border border-border/80 bg-card px-3 py-2 text-xs shadow-soft">
               <summary className="cursor-pointer font-medium text-muted-foreground">Operações recentes ({myHistory.length})</summary>
-              <ul className="mt-2 max-h-24 divide-y overflow-y-auto">
+              <ul className="mt-2 max-h-24 divide-y overflow-hidden">
                 {myHistory.map((p) => {
                   const st = state.stays.find((s) => s.id === p.stayId);
                   return (
@@ -317,7 +317,7 @@ function Attendant() {
           )}
         </div>
 
-        <aside className="flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto">
+        <aside className="flex h-full min-h-0 flex-col gap-2 overflow-hidden">
           <Panel title="1 · Identificar consumidor" className="shrink-0 [&>div:last-child]:p-3.5">
             <CredentialReader onRead={read} demoCodes={guestQuickPicks} />
             {identified && "error" in identified && <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{identified.error}</p>}
@@ -344,7 +344,7 @@ function Attendant() {
             {lines.length === 0 ? (
               <EmptyState icon={<ShoppingBag className="size-4" />} title="Carrinho vazio" hint="Toque nos produtos." />
             ) : (
-              <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+              <div className="min-h-0 flex-1 space-y-2 overflow-hidden">
                 {lines.map((l) => (
                   <div key={l.product.id} className="space-y-1.5">
                     <div className="flex items-center gap-2">

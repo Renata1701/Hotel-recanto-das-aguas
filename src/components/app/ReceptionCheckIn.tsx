@@ -231,7 +231,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
           <div
             className={cn(
               "grid grid-cols-3 gap-1.5 sm:grid-cols-4",
-              compact && "max-h-36 overflow-y-auto pr-1",
+              compact && "max-h-36 overflow-hidden pr-1",
             )}
           >
             {rooms.map((r) => {
@@ -498,7 +498,7 @@ export function ReceptionCheckInDialog({
           <DialogTitle>Novo cliente · Check-in</DialogTitle>
           <DialogDescription>Tipo de permanência, quarto e dados do hóspede.</DialogDescription>
         </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-hidden px-5 py-4">
           <ReceptionCheckInForm
             actor={actor}
             variant="modal"
