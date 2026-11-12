@@ -22,6 +22,7 @@ import {
   clearStoredQrOrigin,
   discoverLanIPv4,
   guestAccessUrl,
+  publicGuestQrOrigin,
   isIPv4Host,
   isLocalDevHost,
   normalizeCredentialCode,
@@ -133,7 +134,7 @@ export function StaffLayout({
           )}
           title="Recanto das Águas"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-stone-800/90 text-stone-100 shadow-soft ring-1 ring-stone-600/50">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-stone-700/85 text-stone-100 shadow-soft ring-1 ring-stone-500/45">
             <Waves className="size-5" />
           </span>
           {!sidebarMini ? (
@@ -270,7 +271,7 @@ export function StaffLayout({
 
       <aside
         className={cn(
-          "staff-sidebar bg-staff-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-stone-800 shadow-xl transition-[transform,width] duration-300 ease-out",
+          "staff-sidebar bg-staff-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-stone-600/80 shadow-xl transition-[transform,width] duration-300 ease-out",
           sidebarMini ? "w-[4.75rem]" : "w-[17.5rem]",
           mobileOpen ? "translate-x-0" : "-translate-x-full",
           !sidebarHidden && "lg:static lg:z-auto lg:shrink-0 lg:translate-x-0 lg:shadow-none",
@@ -308,10 +309,14 @@ export function StaffLayout({
         <div
           className={cn(
             "min-h-0 flex-1",
-            fillViewport ? "flex flex-col overflow-hidden" : "overflow-y-auto",
+            fillViewport ? "flex min-h-0 flex-col overflow-hidden" : "overflow-y-auto",
           )}
         >
-          {children}
+          {fillViewport ? (
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">{children}</div>
+          ) : (
+            children
+          )}
         </div>
       </div>
     </div>
@@ -378,11 +383,7 @@ export function CredentialCodes({
   const portMismatch = qrOrigin && qrOriginPortMismatch(qrOrigin);
 
   const recommendedOrigin = detectedIp ? qrOriginFromLanIp(detectedIp) : null;
-  const liveOrigin =
-    typeof window !== "undefined" && !isLocalDevHost(window.location.hostname)
-      ? window.location.origin
-      : qrOrigin;
-  const scanUrl = guestAccessUrl(credential, liveOrigin);
+  const scanUrl = guestAccessUrl(credential, publicGuestQrOrigin());
   const storedWrongIp =
     qrOrigin &&
     detectedIp &&

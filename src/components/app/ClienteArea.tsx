@@ -176,8 +176,7 @@ export function ClientGuestShell({ title, children }: { title: string; children:
             </div>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">Sem aplicativo</p>
-            <h2 className="mt-3 max-w-md text-3xl font-semibold leading-tight text-white xl:text-4xl">
+            <h2 className="max-w-md text-3xl font-semibold leading-tight text-white xl:text-4xl">
               Sua comanda no celular
             </h2>
             <p className="mt-3 max-w-sm text-base text-white/90">

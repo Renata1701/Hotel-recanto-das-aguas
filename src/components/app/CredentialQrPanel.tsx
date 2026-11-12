@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { QrCode } from "lucide-react";
 import { CredentialCodes, Panel } from "@/components/app/shared";
-import { guestAccessUrl, normalizeCredentialCode, resolveGuestQrOrigin } from "@/lib/guest-access-url";
+import { guestAccessUrl, normalizeCredentialCode, publicGuestQrOrigin, resolveGuestQrOrigin } from "@/lib/guest-access-url";
 
 /** QR que abre `/cliente/entrar` no celular para digitar o PIN. */
 export function CredentialQrPanel({
@@ -37,7 +37,7 @@ export function CredentialQrPanel({
     };
   }, []);
 
-  const url = guestAccessUrl(normalized, origin);
+  const url = guestAccessUrl(normalized, publicGuestQrOrigin());
 
   const title = kiosk ? (
     <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

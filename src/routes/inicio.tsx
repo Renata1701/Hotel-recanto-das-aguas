@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ConciergeBell, MonitorSmartphone, ScanLine, UserPlus } from "lucide-react";
-import hero from "@/assets/hero-pool.jpg";
+import heroLobby from "@/assets/hero-lobby.png";
 import { StaffLayout } from "@/components/app/shared";
 import { requireStaffAuth, useStaffSession } from "@/lib/auth";
 
@@ -53,11 +53,11 @@ function InicioPage() {
       <div className="staff-home-bara min-h-full">
         <section className="relative isolate min-h-[min(78vh,44rem)] overflow-hidden">
           <img
-            src={hero}
-            alt="Piscina do Hotel Recanto das Águas ao entardecer"
-            width={1600}
-            height={1008}
-            className="absolute inset-0 h-full w-full object-cover object-[center_38%]"
+            src={heroLobby}
+            alt="Lobby do Hotel Recanto das Águas à noite"
+            width={1920}
+            height={1080}
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
           <div className="staff-home-hero-overlay absolute inset-0" aria-hidden />
           <div className="relative mx-auto flex min-h-[min(78vh,44rem)] max-w-7xl flex-col justify-end px-5 pb-20 pt-28 sm:px-8 sm:pb-24">

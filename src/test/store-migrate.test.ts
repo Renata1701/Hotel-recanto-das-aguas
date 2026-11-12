@@ -4,7 +4,7 @@ import { loginCredential, productsInSector } from "@/lib/domain";
 import { RENATA_DEMO_GUEST } from "@/lib/demo-client";
 import { seedState } from "@/lib/seed";
 
-const KEY = "rda-state-v1";
+const KEY = "rda-state-v2";
 
 describe("store migrate products", () => {
   beforeEach(() => {

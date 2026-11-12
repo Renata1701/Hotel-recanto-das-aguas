@@ -19,6 +19,7 @@ import {
   Waves,
 } from "lucide-react";
 import { StaffLayout, Countdown, EmptyState, Panel, StatusPill, fmtTime } from "@/components/app/shared";
+import { GuestScanQr } from "@/components/app/GuestScanQr";
 import { CredentialReader } from "@/components/app/CredentialReader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +111,11 @@ function Attendant() {
   const lines = Object.entries(cart).map(([id, v]) => ({ product: products.find((p) => p.id === id)!, ...v }));
   const total = lines.reduce((a, l) => a + l.product.price * l.qty, 0);
   const tracking = proposals.find((p) => p.id === trackingId);
+  const trackingCredCode = useMemo(() => {
+    if (!tracking) return credCode;
+    if (credCode) return credCode;
+    return state.credentials.find((c) => c.id === tracking.credentialId)?.code ?? null;
+  }, [tracking, credCode, state.credentials]);
   const myHistory = proposals.filter((p) => p.attendant === ATTENDANT).slice(0, 8);
 
   const setQty = (id: string, delta: number) =>
@@ -158,10 +164,10 @@ function Attendant() {
 
   return (
     <StaffLayout fillViewport subtitle={`Atendimento · ${ATTENDANT}`}>
-      <main className="mx-auto grid h-full min-h-0 max-w-[100rem] flex-1 gap-3 overflow-hidden px-3 py-3 sm:px-4 lg:grid-cols-[10.5rem_minmax(0,1fr)_20rem] xl:grid-cols-[11rem_minmax(0,1fr)_21rem]">
-        <aside className="flex min-h-0 flex-col lg:h-full">
+      <main className="grid h-full min-h-0 w-full flex-1 gap-2 overflow-hidden p-2 sm:gap-3 sm:p-3 lg:grid-cols-[9.5rem_minmax(0,1fr)_min(22rem,30vw)] lg:grid-rows-[minmax(0,1fr)]">
+        <aside className="flex min-h-0 min-w-0 flex-col self-stretch">
           <nav
-            className="flex flex-row gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-card p-1.5 shadow-soft lg:flex-col lg:gap-1 lg:overflow-hidden lg:p-2"
+            className="flex h-full min-h-0 flex-row gap-1.5 overflow-x-auto rounded-xl border border-border/80 bg-card p-1.5 shadow-soft lg:flex lg:flex-1 lg:flex-col lg:gap-1 lg:overflow-hidden lg:p-2"
             aria-label="Setor de atendimento"
           >
             <p className="hidden w-full px-1.5 pb-0.5 text-[0.6rem] font-semibold uppercase tracking-wider text-muted-foreground lg:block">
@@ -191,7 +197,7 @@ function Attendant() {
           </nav>
         </aside>
 
-        <div className="flex min-h-0 min-w-0 flex-col gap-2 overflow-hidden">
+        <div className="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-hidden">
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-center">
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -219,7 +225,7 @@ function Attendant() {
             ))}
             </div>
           </div>
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {filtered.length === 0 ? (
               <EmptyState
                 icon={<Search className="size-5" />}
@@ -247,7 +253,7 @@ function Attendant() {
                 }
               />
             ) : (
-              <div className="grid h-full auto-rows-fr grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              <div className="grid h-full min-h-full auto-rows-[minmax(5.75rem,1fr)] grid-cols-2 gap-2 content-stretch sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {filtered.map((p) => {
                   const inCart = cart[p.id]?.qty ?? 0;
                   return (
@@ -311,7 +317,7 @@ function Attendant() {
           )}
         </div>
 
-        <aside className="flex min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden">
+        <aside className="flex h-full min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto">
           <Panel title="1 · Identificar consumidor" className="shrink-0 [&>div:last-child]:p-3.5">
             <CredentialReader onRead={read} demoCodes={guestQuickPicks} />
             {identified && "error" in identified && <p className="mt-3 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{identified.error}</p>}
@@ -381,6 +387,11 @@ function Attendant() {
                     <span className="size-2.5 animate-pulse-ring rounded-full bg-warning" />
                     Aguardando o cliente conferir e confirmar…
                   </div>
+                  <div className="flex items-baseline justify-between border-b border-border/80 pb-3">
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Valor da proposta</span>
+                    <span className="tabular font-display text-2xl font-semibold text-foreground">{brl(tracking.total)}</span>
+                  </div>
+                  {trackingCredCode ? <GuestScanQr code={trackingCredCode} /> : null}
                   <Countdown expiresAt={tracking.expiresAt} />
                   <Button variant="outline" className="w-full" onClick={() => { const e = commit((s) => cancelProposal(s, tracking.id, ATTENDANT)); if (e) toast.error(e); }}>Cancelar proposta</Button>
                 </div>

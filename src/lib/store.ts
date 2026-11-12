@@ -9,7 +9,8 @@ import { HOTEL_ROOMS } from "./hotel-rooms";
 import { seedState } from "./seed";
 import { migrateCatalog } from "./catalog-migration";
 
-const KEY = "rda-state-v1";
+/** Incrementar quando o seed de demonstração mudar de forma incompatível com snapshots salvos. */
+const KEY = "rda-state-v2";
 let state: State | null = null;
 const listeners = new Set<() => void>();
 

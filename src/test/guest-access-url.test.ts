@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_PUBLIC_APP_URL,
   guestAccessUrl,
   isExampleQrOrigin,
   isUsableLanIPv4,
   originHostIsBroken,
+  publicGuestQrOrigin,
 } from "@/lib/guest-access-url";
 
 describe("guest QR origin", () => {
@@ -23,6 +25,13 @@ describe("guest QR origin", () => {
   it("builds access URL with origin", () => {
     expect(guestAccessUrl("RDA-AN4S-208B", "http://192.168.1.42:8080")).toBe(
       "http://192.168.1.42:8080/cliente/entrar?codigo=RDA-AN4S-208B&qr=1",
+    );
+  });
+
+  it("uses public domain in QR by default", () => {
+    expect(publicGuestQrOrigin()).toBe(DEFAULT_PUBLIC_APP_URL);
+    expect(guestAccessUrl("RDA-TEST", publicGuestQrOrigin())).toBe(
+      `${DEFAULT_PUBLIC_APP_URL}/cliente/entrar?codigo=RDA-TEST&qr=1`,
     );
   });
 });

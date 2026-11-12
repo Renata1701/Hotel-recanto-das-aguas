@@ -1,9 +1,8 @@
 const QR_ORIGIN_KEY = "rda-guest-qr-origin";
+const LAN_IP_CACHE_KEY = "rda-lan-ip-cache";
 
-const envOrigin =
-  typeof import.meta !== "undefined" && import.meta.env["VITE_PUBLIC_APP_URL"]
-    ? normalizeQrOrigin(String(import.meta.env["VITE_PUBLIC_APP_URL"]))
-    : undefined;
+/** Domínio público (InfinityFree) — usado no QR quando não há `VITE_PUBLIC_APP_URL`. */
+export const DEFAULT_PUBLIC_APP_URL = "http://sitema-hotel.free.nf";
 
 export function normalizeCredentialCode(code: string) {
   return code.trim().toUpperCase();
@@ -76,6 +75,24 @@ export function clearStoredQrOrigin() {
   window.dispatchEvent(new Event("rda-qr-origin"));
 }
 
+export function cacheLanIp(ip: string) {
+  if (typeof sessionStorage === "undefined" || !isUsableLanIPv4(ip)) return;
+  sessionStorage.setItem(LAN_IP_CACHE_KEY, ip);
+}
+
+export function cachedLanIp(): string | null {
+  if (typeof sessionStorage === "undefined") return null;
+  const ip = sessionStorage.getItem(LAN_IP_CACHE_KEY);
+  return ip && isUsableLanIPv4(ip) ? ip : null;
+}
+
+function originFromCachedLan(): string | null {
+  if (typeof window === "undefined") return null;
+  const ip = cachedLanIp();
+  if (!ip) return null;
+  return qrOriginFromLanIp(ip, window.location.protocol);
+}
+
 export function currentDevPagePort(): string {
   if (typeof window === "undefined") return "";
   return window.location.port || (window.location.protocol === "https:" ? "443" : "80");
@@ -146,13 +163,32 @@ export function guestAccessPath(code: string) {
   return `/cliente/entrar?${params.toString()}`;
 }
 
-/** Origem síncrona: domínio público ou IP já na barra do navegador. */
+/** Origem do QR — sempre URL pública (`VITE_PUBLIC_APP_URL` ou domínio InfinityFree). */
+export function publicGuestQrOrigin(): string {
+  const fromEnv =
+    typeof import.meta !== "undefined" && import.meta.env["VITE_PUBLIC_APP_URL"]
+      ? normalizeQrOrigin(String(import.meta.env["VITE_PUBLIC_APP_URL"]))
+      : null;
+  return fromEnv ?? DEFAULT_PUBLIC_APP_URL;
+}
+
+/** Origem síncrona legada (ajuste manual de IP em dev no terminal). */
 export function syncGuestQrOrigin(): string | null {
-  if (envOrigin) return envOrigin;
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") return publicGuestQrOrigin();
   if (isUsableLanIPv4(window.location.hostname)) return window.location.origin;
   if (!isLocalDevHost(window.location.hostname)) return window.location.origin;
-  return getStoredQrOrigin();
+  const stored = getStoredQrOrigin();
+  if (stored) {
+    if (qrOriginPortMismatch(stored)) {
+      const fixed = qrOriginWithLivePort(stored);
+      if (fixed) {
+        setStoredQrOrigin(fixed);
+        return fixed;
+      }
+    }
+    return stored;
+  }
+  return originFromCachedLan();
 }
 
 /** Tenta obter IPv4 da LAN (útil em dev com localhost no PC). */
@@ -162,14 +198,25 @@ export function discoverLanIPv4(): Promise<string | null> {
       resolve(null);
       return;
     }
-    const pc = new RTCPeerConnection({ iceServers: [] });
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
     const ips = new Set<string>();
+    let earlyFinishScheduled = false;
+    let settled = false;
     const finish = (ip: string | null) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
-      pc.close();
+      try {
+        pc.close();
+      } catch {
+        /* ignore */
+      }
+      if (ip) cacheLanIp(ip);
       resolve(ip);
     };
-    const timer = setTimeout(() => finish(pickBestLanIp(ips)), 2500);
+    const timer = setTimeout(() => finish(pickBestLanIp(ips)), 3500);
     pc.createDataChannel("rda");
     pc.onicecandidate = (event) => {
       const cand = event.candidate?.candidate;
@@ -179,6 +226,10 @@ export function discoverLanIPv4(): Promise<string | null> {
       const ip = match[1]!;
       if (isUsableLanIPv4(ip)) {
         ips.add(ip);
+        if (!earlyFinishScheduled) {
+          earlyFinishScheduled = true;
+          setTimeout(() => finish(pickBestLanIp(ips)), 400);
+        }
       }
     };
     void pc
@@ -193,42 +244,9 @@ export function discoverLanIPv4(): Promise<string | null> {
   });
 }
 
-/** Origem absoluta usada no QR (celular precisa alcançar este host). */
-export async function resolveGuestQrOrigin(): Promise<string | null> {
-  if (envOrigin) return envOrigin;
-
-  if (typeof window === "undefined") return null;
-
-  const { hostname, protocol } = window.location;
-  if (isUsableLanIPv4(hostname)) {
-    return window.location.origin;
-  }
-
-  if (!isLocalDevHost(hostname)) {
-    return window.location.origin;
-  }
-
-  const stored = getStoredQrOrigin();
-  if (stored) {
-    if (qrOriginPortMismatch(stored)) {
-      const fixed = qrOriginWithLivePort(stored);
-      if (fixed) {
-        setStoredQrOrigin(fixed);
-        return fixed;
-      }
-    }
-    return stored;
-  }
-
-  const lanIp = await discoverLanIPv4();
-  if (lanIp) {
-    const guessed = qrOriginFromLanIp(lanIp, protocol);
-    if (guessed && setStoredQrOrigin(guessed)) {
-      return guessed;
-    }
-  }
-
-  return null;
+/** Origem usada no QR no celular — URL pública, sem IP da LAN. */
+export async function resolveGuestQrOrigin(): Promise<string> {
+  return publicGuestQrOrigin();
 }
 
 /** URL absoluta para leitura no celular (câmera / leitor de QR). */
