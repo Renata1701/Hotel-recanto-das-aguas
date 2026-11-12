@@ -8,11 +8,41 @@ export function normalizeCredentialCode(code: string) {
   return code.trim().toUpperCase();
 }
 
+/** Valor do secret / .env — ignora colar a linha inteira `VITE_PUBLIC_APP_URL=...`. */
+export function unwrapVitePublicAppUrl(raw: string): string {
+  let s = raw.trim();
+  s = s.replace(/^VITE_PUBLIC_APP_URL\s*=\s*/i, "").trim();
+  s = s.replace(/^["']|["']$/g, "");
+  return s;
+}
+
+/** Host gerado quando o secret no Lovable veio errado (vira subdomínio `vitepublicappurl...`). */
+export function isCorruptQrHostname(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h.includes("vitepublicappurl")) return true;
+  if (h.includes("vitepublicapp")) return true;
+  if (h.endsWith(".lovable.app") && h.includes("itema-hotel")) return true;
+  return false;
+}
+
+export function isTrustedQrOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname;
+    if (isCorruptQrHostname(host)) return false;
+    if (originHostIsBroken(origin) || isExampleQrOrigin(origin)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function normalizeQrOrigin(raw: string): string | null {
   try {
-    const u = new URL(raw.trim());
+    const u = new URL(unwrapVitePublicAppUrl(raw));
     if (u.protocol !== "http:" && u.protocol !== "https:") return null;
-    return `${u.protocol}//${u.host}`;
+    const origin = `${u.protocol}//${u.host}`;
+    if (!isTrustedQrOrigin(origin)) return null;
+    return origin;
   } catch {
     return null;
   }
@@ -141,7 +171,7 @@ export function getStoredQrOrigin(): string | null {
     localStorage.removeItem(QR_ORIGIN_KEY);
     return null;
   }
-  if (originHostIsBroken(normalized) || isExampleQrOrigin(normalized)) {
+  if (!isTrustedQrOrigin(normalized)) {
     localStorage.removeItem(QR_ORIGIN_KEY);
     return null;
   }
@@ -151,7 +181,7 @@ export function getStoredQrOrigin(): string | null {
 export function setStoredQrOrigin(origin: string) {
   const normalized = normalizeQrOrigin(origin);
   if (!normalized || typeof window === "undefined") return null;
-  if (originHostIsBroken(normalized) || isExampleQrOrigin(normalized)) return null;
+  if (!isTrustedQrOrigin(normalized)) return null;
   localStorage.setItem(QR_ORIGIN_KEY, normalized);
   window.dispatchEvent(new Event("rda-qr-origin"));
   return normalized;
@@ -159,24 +189,82 @@ export function setStoredQrOrigin(origin: string) {
 
 /** Caminho interno (links no app / QR) — abre tela de PIN com credencial preenchida. */
 export function guestAccessPath(code: string) {
-  const params = new URLSearchParams({ codigo: normalizeCredentialCode(code), qr: "1" });
-  return `/cliente/entrar?${params.toString()}`;
+  const codigo = encodeURIComponent(normalizeCredentialCode(code));
+  return `/cliente/entrar?codigo=${codigo}&qr=1`;
 }
 
-/** Origem do QR — sempre URL pública (`VITE_PUBLIC_APP_URL` ou domínio InfinityFree). */
+function envPublicOrigin(): string | null {
+  if (typeof import.meta === "undefined" || !import.meta.env["VITE_PUBLIC_APP_URL"]) return null;
+  return normalizeQrOrigin(String(import.meta.env["VITE_PUBLIC_APP_URL"]));
+}
+
+function devReachableOrigin(): string | null {
+  if (typeof window === "undefined") return null;
+  if (isUsableLanIPv4(window.location.hostname)) return window.location.origin;
+  const fromCache = originFromCachedLan();
+  if (fromCache) return fromCache;
+  return null;
+}
+
+function originLooksLikeInfinityRedirect(origin: string): boolean {
+  try {
+    return new URL(origin).hostname.endsWith(".free.nf");
+  } catch {
+    return false;
+  }
+}
+
+function allowFreeNfQrInDev(): boolean {
+  if (typeof import.meta === "undefined" || !import.meta.env.DEV) return true;
+  return String(import.meta.env.VITE_QR_ALLOW_FREE_NF_IN_DEV ?? "").toLowerCase() === "true";
+}
+
+/**
+ * Origem do QR no browser (síncrona): LAN salva, IP da aba, cache STUN, depois env/domínio.
+ */
+export function effectiveGuestQrOrigin(): string {
+  const dev = typeof import.meta !== "undefined" && Boolean(import.meta.env.DEV);
+  const fromEnv = envPublicOrigin();
+
+  if (typeof window !== "undefined") {
+    const synced = syncGuestQrOrigin();
+    if (synced) return synced;
+    const reachable = devReachableOrigin();
+    if (reachable) return reachable;
+  }
+
+  if (dev && !allowFreeNfQrInDev()) {
+    if (fromEnv && !originLooksLikeInfinityRedirect(fromEnv)) return fromEnv;
+    const live = livePageOriginForQr();
+    if (live) return live;
+    return DEFAULT_PUBLIC_APP_URL;
+  }
+
+  if (fromEnv) return fromEnv;
+  return DEFAULT_PUBLIC_APP_URL;
+}
+
+/**
+ * Origem do QR.
+ * - Produção / Lovable publicado: `VITE_PUBLIC_APP_URL` ou `sitema-hotel.free.nf`.
+ * - `npm run dev`: IP da rede (não `free.nf`, que redireciona para Lovable e costuma falhar).
+ */
 export function publicGuestQrOrigin(): string {
-  const fromEnv =
-    typeof import.meta !== "undefined" && import.meta.env["VITE_PUBLIC_APP_URL"]
-      ? normalizeQrOrigin(String(import.meta.env["VITE_PUBLIC_APP_URL"]))
-      : null;
-  return fromEnv ?? DEFAULT_PUBLIC_APP_URL;
+  return effectiveGuestQrOrigin();
 }
 
 /** Origem síncrona legada (ajuste manual de IP em dev no terminal). */
+function livePageOriginForQr(): string | null {
+  if (typeof window === "undefined") return null;
+  const live = window.location.origin;
+  return isTrustedQrOrigin(live) ? live : null;
+}
+
 export function syncGuestQrOrigin(): string | null {
   if (typeof window === "undefined") return publicGuestQrOrigin();
   if (isUsableLanIPv4(window.location.hostname)) return window.location.origin;
-  if (!isLocalDevHost(window.location.hostname)) return window.location.origin;
+  const live = livePageOriginForQr();
+  if (!isLocalDevHost(window.location.hostname) && live) return live;
   const stored = getStoredQrOrigin();
   if (stored) {
     if (qrOriginPortMismatch(stored)) {
@@ -244,9 +332,20 @@ export function discoverLanIPv4(): Promise<string | null> {
   });
 }
 
-/** Origem usada no QR no celular — URL pública, sem IP da LAN. */
+/** Origem usada no QR no celular — em dev tenta descobrir o IPv4 da LAN primeiro. */
 export async function resolveGuestQrOrigin(): Promise<string> {
-  return publicGuestQrOrigin();
+  const dev = typeof import.meta !== "undefined" && Boolean(import.meta.env.DEV);
+  if (dev && typeof window !== "undefined") {
+    const ip = await discoverLanIPv4();
+    if (ip) {
+      const guessed = qrOriginFromLanIp(ip);
+      if (guessed) {
+        setStoredQrOrigin(guessed);
+        return guessed;
+      }
+    }
+  }
+  return effectiveGuestQrOrigin();
 }
 
 /** URL absoluta para leitura no celular (câmera / leitor de QR). */

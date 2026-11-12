@@ -442,6 +442,8 @@ export function openStay(
     room?: string | undefined;
     guests: GuestInput[];
     medium: CredentialMedium;
+    /** PIN numérico para confirmar consumos (terminal / sessão). */
+    pin: string;
     checkInDate?: string | undefined;
     checkOutDate?: string | undefined;
     dayUseEndTime?: string | undefined;
@@ -469,6 +471,9 @@ export function openStay(
   if (input.type === "dayuse") {
     if (!input.dayUseEndTime?.trim()) throw new DomainError("Informe até qual horário o hóspede fica.");
   }
+  const pin = input.pin.trim();
+  if (!pin) throw new DomainError("Informe o PIN para confirmar consumos.");
+  if (!/^\d{4,6}$/.test(pin)) throw new DomainError("O PIN deve ter de 4 a 6 dígitos.");
   const dayUseEndsAt =
     input.type === "dayuse" && input.dayUseEndTime ? parseDayUseEndTime(input.dayUseEndTime, now) : undefined;
   const participants: Participant[] = guests.map((g) => ({
@@ -497,7 +502,7 @@ export function openStay(
     participantId: p.id,
     medium: input.medium,
     status: "ativa",
-    activationCode: newActivationCode(),
+    pin,
     issuedAt: now,
   }));
   return {
@@ -518,7 +523,7 @@ export function registerFictionalGuest(s: State, name: string, actor = "Cadastro
   if (trimmed.length < 2) throw new DomainError("Informe seu nome completo.");
   return openStay(
     s,
-    { type: "dayuse", guests: [{ name: trimmed }], medium: "celular", dayUseEndTime: "18:00" },
+    { type: "dayuse", guests: [{ name: trimmed }], medium: "celular", pin: "5678", dayUseEndTime: "18:00" },
     actor,
     now,
   );

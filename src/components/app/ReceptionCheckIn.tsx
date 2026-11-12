@@ -90,6 +90,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
   const [checkInDate, setCheckInDate] = useState(defaultCheckInDate);
   const [checkOutDate, setCheckOutDate] = useState(defaultCheckOutDate);
   const [dayUseEndTime, setDayUseEndTime] = useState(defaultDayUseEndTime);
+  const [confirmPin, setConfirmPin] = useState("");
   const [issuedCreds, setIssuedCreds] = useState<Credential[]>([]);
 
   const freeCount = rooms.filter((r) => r.status === "livre").length;
@@ -104,6 +105,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
     setCheckInDate(defaultCheckInDate());
     setCheckOutDate(defaultCheckOutDate());
     setDayUseEndTime(defaultDayUseEndTime());
+    setConfirmPin("");
   };
 
   const selectRoom = (r: RoomAvailability) => {
@@ -135,6 +137,11 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
       toast.error("Informe o nome do responsável.");
       return;
     }
+    const pin = confirmPin.trim();
+    if (!/^\d{4,6}$/.test(pin)) {
+      toast.error("Defina um PIN de 4 a 6 dígitos para confirmar consumos.");
+      return;
+    }
 
     let stayId = "";
     const err = commit((s) => {
@@ -145,6 +152,7 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
           room: type === "hospedagem" ? room ?? undefined : undefined,
           guests,
           medium,
+          pin,
           checkInDate: type === "hospedagem" ? checkInDate : undefined,
           checkOutDate: type === "hospedagem" ? checkOutDate : undefined,
           dayUseEndTime: type === "dayuse" ? dayUseEndTime : undefined,
@@ -403,6 +411,26 @@ export function ReceptionCheckInForm({ actor, variant = "page", onSuccess }: Che
             </Select>
           </div>
 
+          <div className="space-y-1">
+            <Label htmlFor="confirm-pin" className="text-xs">
+              PIN para confirmar consumos *
+            </Label>
+            <Input
+              id="confirm-pin"
+              type="password"
+              inputMode="numeric"
+              autoComplete="off"
+              value={confirmPin}
+              onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="4 a 6 dígitos"
+              className="h-9 max-w-[10rem] text-center font-mono tracking-widest"
+              maxLength={6}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              O hóspede usa este número no celular ou no terminal para aprovar pedidos.
+            </p>
+          </div>
+
           <Button type="button" className="h-10 w-full" onClick={submit}>
             Cadastrar e emitir credenciais
           </Button>
@@ -429,6 +457,11 @@ function CredentialList({ creds }: { creds: Credential[] }) {
           <li key={c.id} className="rounded-xl border bg-secondary/25 p-3">
             <p className="text-sm font-semibold">{p?.name}</p>
             <p className="font-mono text-xs">{c.code}</p>
+            {c.pin ? (
+              <p className="mt-1 text-xs text-foreground">
+                PIN (confirmação): <span className="font-mono font-semibold">{c.pin}</span>
+              </p>
+            ) : null}
             {c.activationCode && (
               <p className="mt-1 text-xs">
                 Ativação: <span className="font-mono font-semibold">{c.activationCode}</span>

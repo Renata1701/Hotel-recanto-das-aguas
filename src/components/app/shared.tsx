@@ -383,7 +383,8 @@ export function CredentialCodes({
   const portMismatch = qrOrigin && qrOriginPortMismatch(qrOrigin);
 
   const recommendedOrigin = detectedIp ? qrOriginFromLanIp(detectedIp) : null;
-  const scanUrl = guestAccessUrl(credential, publicGuestQrOrigin());
+  const scanOrigin = qrOrigin ?? publicGuestQrOrigin();
+  const scanUrl = guestAccessUrl(credential, scanOrigin);
   const storedWrongIp =
     qrOrigin &&
     detectedIp &&

@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_PUBLIC_APP_URL,
   guestAccessUrl,
+  isCorruptQrHostname,
   isExampleQrOrigin,
   isUsableLanIPv4,
+  normalizeQrOrigin,
   originHostIsBroken,
   publicGuestQrOrigin,
+  unwrapVitePublicAppUrl,
 } from "@/lib/guest-access-url";
 
 describe("guest QR origin", () => {
@@ -28,10 +31,26 @@ describe("guest QR origin", () => {
     );
   });
 
-  it("uses public domain in QR by default", () => {
-    expect(publicGuestQrOrigin()).toBe(DEFAULT_PUBLIC_APP_URL);
-    expect(guestAccessUrl("RDA-TEST", publicGuestQrOrigin())).toBe(
+  it("builds entrar URL for QR scan", () => {
+    expect(guestAccessUrl("RDA-TEST", DEFAULT_PUBLIC_APP_URL)).toBe(
       `${DEFAULT_PUBLIC_APP_URL}/cliente/entrar?codigo=RDA-TEST&qr=1`,
     );
+  });
+
+  it("unwraps pasted .env lines and rejects corrupt Lovable hosts", () => {
+    expect(unwrapVitePublicAppUrl("VITE_PUBLIC_APP_URL=http://sitema-hotel.free.nf")).toBe(
+      "http://sitema-hotel.free.nf",
+    );
+    expect(isCorruptQrHostname("vitepublicappurlhttpsitema-hotelfreenf.lovable.app")).toBe(true);
+    expect(normalizeQrOrigin("https://vitepublicappurlhttpsitema-hotelfreenf.lovable.app")).toBeNull();
+    expect(normalizeQrOrigin("http://sitema-hotel.free.nf")).toBe("http://sitema-hotel.free.nf");
+  });
+
+  it("falls back to DEFAULT when no env and no browser", () => {
+    const prev = globalThis.window;
+    // @ts-expect-error — simula SSR / testes sem DOM
+    delete globalThis.window;
+    expect(publicGuestQrOrigin()).toBe(DEFAULT_PUBLIC_APP_URL);
+    globalThis.window = prev;
   });
 });
